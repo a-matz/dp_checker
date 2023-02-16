@@ -21,10 +21,20 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QgsFileWidget" name="fileWidget"/>
+       <widget class="QgsFileWidget" name="fileWidget">
+        <property name="storageMode">
+         <enum>QgsFileWidget::GetDirectory</enum>
+        </property>
+        <property name="options">
+         <set>QFileDialog::DontConfirmOverwrite|QFileDialog::ShowDirsOnly</set>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="button_load_dp">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Dichtheitsprüfungen laden</string>
         </property>
@@ -122,11 +132,11 @@
         </property>
        </spacer>
       </item>
+      <item row="6" column="0" colspan="4">
+       <widget class="QTableWidget" name="table"/>
+      </item>
      </layout>
     </widget>
-   </item>
-   <item>
-    <widget class="QTableView" name="table"/>
    </item>
    <item>
     <widget class="QPushButton" name="pushButton">
