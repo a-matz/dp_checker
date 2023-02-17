@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>880</width>
-    <height>684</height>
+    <height>647</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,50 +49,10 @@
       <string>Layer und Attribute der Haltungen wählen</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Schacht unten</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_bisSchacht"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Layer der Haltungen</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Durchmesser</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_haltungnr"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Haltungsbezeichnung</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
-       <widget class="QgsMapLayerComboBox" name="combobox_maplayer"/>
-      </item>
-      <item row="3" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_vonSchacht"/>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Länge</string>
+       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
+        <property name="allowEmptyLayer">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -104,10 +64,32 @@
        </widget>
       </item>
       <item row="1" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_dn"/>
+       <widget class="QgsFieldComboBox" name="combobox_dn">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="3" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_laenge"/>
+       <widget class="QgsFieldComboBox" name="combobox_laenge">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Layer der Haltungen</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Schacht unten</string>
+        </property>
+       </widget>
       </item>
       <item row="4" column="2">
        <widget class="QLabel" name="label_7">
@@ -116,34 +98,90 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_vonSchacht">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Länge</string>
+        </property>
+       </widget>
+      </item>
       <item row="4" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_material"/>
-      </item>
-      <item row="5" column="1">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <widget class="QgsFieldComboBox" name="combobox_material">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
+       </widget>
       </item>
-      <item row="6" column="0" colspan="4">
-       <widget class="QTableWidget" name="table"/>
+      <item row="5" column="0" colspan="4">
+       <widget class="QTableWidget" name="table">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Haltungsbezeichnung</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Durchmesser</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_haltungnr">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>Punktlayer mit Prüfort erstellen</string>
+    <layout class="QGridLayout" name="gridLayout_2" rowstretch="0">
+     <property name="topMargin">
+      <number>0</number>
      </property>
-    </widget>
+     <property name="verticalSpacing">
+      <number>10</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="button_create_point_layer">
+       <property name="minimumSize">
+        <size>
+         <width>500</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Punktlayer mit Prüfort erstellen</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QgsProjectionSelectionWidget" name="projection"/>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="button_box">
@@ -172,6 +210,11 @@
    <class>QgsMapLayerComboBox</class>
    <extends>QComboBox</extends>
    <header>qgsmaplayercombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsProjectionSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsprojectionselectionwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
