@@ -174,11 +174,11 @@
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>70</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
-      <string>Protokollierungslisten für Abgleich laden</string>
+      <string>Protokollierungslisten für Abgleich wählen</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -311,14 +311,17 @@
      </property>
      <item row="0" column="2">
       <widget class="QPushButton" name="button_csv_export">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="maximumSize">
         <size>
-         <width>150</width>
+         <width>180</width>
          <height>16777215</height>
         </size>
        </property>
        <property name="text">
-        <string>Export Tabelle als CSV</string>
+        <string>Tabelle als CSV exportieren</string>
        </property>
       </widget>
      </item>
