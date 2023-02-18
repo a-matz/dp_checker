@@ -27,10 +27,14 @@ import glob
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import processing
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets, QtGui
-from qgis.core import QgsMapLayerProxyModel
-from qgis.PyQt.QtCore import Qt, QSignalBlocker
+from qgis.core import (QgsMapLayerProxyModel, QgsGeometry, 
+                      QgsProject, QgsFeature, QgsPoint, edit, QgsVectorLayer,
+                      QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsField, QgsPointXY,
+                      QgsProcessing)
+from qgis.PyQt.QtCore import Qt, QSignalBlocker, QVariant
 from qgis.PyQt.QtWidgets import QTableWidgetItem
 import xml.etree.ElementTree as et
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -51,9 +55,17 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.button_load_dp.clicked.connect(self.load_dp_files)
         self.fileWidget.fileChanged.connect(self.check_dp_path)
+        self.button_create_point_layer.clicked.connect(self.create_points)
+        self.button_preview_protocol_reach.clicked.connect(lambda checked, preview = True: self.load_reach_protocol(preview))
+        self.combobox_haltungnr.currentIndexChanged.connect(self.check_enable_basedata_button)
 
         self.combobox_maplayer.setFilters(QgsMapLayerProxyModel.LineLayer)
 
+        self.filepath_reach_protocol.setFilter("Excel (*.xlsx)")
+        self.filepath_dp_protocol.setFilter("Excel (*.xlsx)")
+
+        # set default crs
+        self.projection.setCrs(QgsCoordinateReferenceSystem(3857))
         self.combobox_attribute = [
             self.combobox_haltungnr,
             self.combobox_vonSchacht,
@@ -68,10 +80,22 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.combobox_maplayer.layerChanged.connect(lambda layer, combobox = combobox: self.combobox_reset_index(combobox))
         
         self.combobox_maplayer.setCurrentIndex(-1)
-        
+        self.combobox_maplayer.layerChanged.connect(self.update_crs)
+    
+    def update_crs(self):
+        if self.combobox_maplayer.currentLayer() != None:
+            self.projection.setCrs(self.combobox_maplayer.currentLayer().crs())
+        else:
+            self.projection.setCrs(QgsCoordinateReferenceSystem('EPSG:3857'))
 
     def combobox_reset_index(self,combobox):
         combobox.setCurrentIndex(-1)
+    
+    def check_enable_basedata_button(self):
+        if self.combobox_haltungnr.currentIndex() not in (-1,0) and self.combobox_maplayer.currentLayer != None and self.button_create_point_layer.isEnabled():
+            self.button_load_base_data.setEnabled(True)
+        else:
+            self.button_load_base_data.setEnabled(False)
 
     def check_dp_path(self):
         """
@@ -100,6 +124,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         for dp_file in files:
             dp_dict = {}
             xtree = et.parse(dp_file)
+            # sensor media
+            protocol = xtree.find("document").find("data").find("sensor").find("media").get("value")
             #protocol data
             protocol = xtree.find("document").find("data").find("protocol")
             try:
@@ -166,6 +192,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             except:
                 dp_dict["GPS N"] = None
                 dp_dict["GPS E"] = None
+            try:
+                date = gps_position_string = measurement.find("end").find("date").get("value")
+                dp_dict["Datum"] = datetime.strptime(date, "%Y.%m.%d")
+            except:
+                dp_dict["Datum"] = None
+            
             dp_dict["Datei"] = os.path.basename(dp_file)
 
 
@@ -174,6 +206,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dp_table = pd.DataFrame(df_list)
         # update tableviewwidget
         self.update_table(self.dp_table)
+        self.button_create_point_layer.setEnabled(True)
+        self.check_enable_basedata_button()
     
     def update_table(self, data):
         with QSignalBlocker(self.table) as block:
@@ -189,7 +223,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 for col,value in enumerate(row):
                     if value != None and not pd.isnull(value):
                         if isinstance(value,pd.datetime):
-                            value = value.strftime("%H:%M:%S")
+                            # check if value is date or time, it is considered that no passed date is older than 2000
+                            if value > datetime.strptime("2000.01.01", "%Y.%m.%d"):
+                                value = value.strftime("%Y-%m-%d")   
+                            else:
+                                value = value.strftime("%H:%M:%S")
                         item = QTableWidgetItem()
                         
                         #item.setData(Qt.EditRole, value)
@@ -201,9 +239,83 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.table.resizeColumnsToContents()
             self.table.setSortingEnabled(True)
             self.table.sortByColumn(0,Qt.AscendingOrder)
+        self.button_csv_export.setEnabled(True)
 
+    def create_points(self):
+        layer = QgsVectorLayer("point?crs=epsg:4326", "punkte", "memory")
+        pr = layer.dataProvider()
+        pr.addAttributes(
+            [QgsField('Bezeichnung',QVariant.String),
+            QgsField('SchachtOben', QVariant.String),
+            QgsField('SchachtUnten',QVariant.String),
+            QgsField('ErgebnisDP',QVariant.String)]
+        )
+        layer.updateFields()
 
+        for id,row in self.dp_table.iterrows():
+            feat = QgsFeature()
+            feat.setAttributes([row["Bezeichnung"],row["Schacht oben"], row["Schacht unten"], row["Ergebnis"]])
+            feat.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(row["GPS E"], row["GPS N"])))
+            with edit(layer):
+                layer.addFeature(feat)
 
+        #sourceCrs = QgsCoordinateReferenceSystem(4326)
+        #d#estCrs = self.projection.crs()
+        #tr = QgsCoordinateTransform(sourceCrs,destCrs, QgsProject.instance())
+
+        alg_params = {
+                    'INPUT': layer,
+                    'OPERATION': '',
+                    'TARGET_CRS': self.projection.crs(),
+                    'OUTPUT': QgsProcessing.TEMPORARY_OUTPUT}
+
+        out = processing.run('native:reprojectlayer', alg_params)
+        out["OUTPUT"].setName("Dichtheitsprüfung")
+        QgsProject.instance().addMapLayer(out["OUTPUT"])
+
+    def load_reach_protocol(self, preview):
+        path = self.filepath_reach_protocol.filePath()
+        names = ["Bezeichnung", "Ergebnis OI"]
+        skip = self.reach_protocol_skip.value()
+        reach_name = self.reach_protocol_name.value()
+        result = self.reach_protocol_result.value()
+
+        self.load_excel(path, skip, [reach_name,result], names, preview)
+
+    def load_excel(self, path, skip_rows, read_cols,col_names, preview = True):
+        """
+        path str: Path to .xlsx file
+        skip_rows int: number of rows to skip
+        read_cols list: list of cols to import
+        preview bool: if true loads to tableviewwidget, when fals function returns table
+        """
+        print(preview)
+        #col numbers to letters and remove name if colnr = 0
+        letters_list = [] 
+        remove_col = []
+        for i,nr in enumerate(read_cols):
+            if nr != 0:
+                letters_list.append(chr(ord('@') + nr))
+            else:
+                remove_col.append(i)
+        if len(remove_col) > 0:
+            [col_names.pop(i) for i in remove_col.sort(reverse = True)]
+
+        
+
+        letters = ",".join(letters_list)
+        df = pd.read_excel(path, skiprows = skip_rows, usecols = letters)
+        old_names = df.columns.values
+        rename_dict = {}
+        for i,old in enumerate(old_names):
+            rename_dict[old] = col_names[i]
+        
+        df.rename(columns = rename_dict, inplace = True)
+        if preview:
+            self.update_table(df)
+        else:
+            return df
+        
 
 
     

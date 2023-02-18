@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>880</width>
-    <height>647</height>
+    <width>1034</width>
+    <height>929</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,18 +19,8 @@
      <property name="title">
       <string>Dichtheitsprüfungen einlesen</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QgsFileWidget" name="fileWidget">
-        <property name="storageMode">
-         <enum>QgsFileWidget::GetDirectory</enum>
-        </property>
-        <property name="options">
-         <set>QFileDialog::DontConfirmOverwrite|QFileDialog::ShowDirsOnly</set>
-        </property>
-       </widget>
-      </item>
-      <item>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="1" column="0">
        <widget class="QPushButton" name="button_load_dp">
         <property name="enabled">
          <bool>false</bool>
@@ -40,19 +30,49 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QgsFileWidget" name="fileWidget">
+        <property name="storageMode">
+         <enum>QgsFileWidget::GetDirectory</enum>
+        </property>
+        <property name="options">
+         <set>QFileDialog::DontConfirmOverwrite|QFileDialog::ShowDirsOnly</set>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Layer und Attribute der Haltungen wählen</string>
+      <string>Layer für Stammdatenabgleich wählen</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
-       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
-        <property name="allowEmptyLayer">
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Schacht unten</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
+        <property name="allowEmptyFieldName">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Durchmesser</string>
         </property>
        </widget>
       </item>
@@ -60,6 +80,48 @@
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Schacht oben</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QgsFieldComboBox" name="combobox_material">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_haltungnr">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
+        <property name="allowEmptyLayer">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Material</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_vonSchacht">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Haltungsbezeichnung</string>
         </property>
        </widget>
       </item>
@@ -84,27 +146,6 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Schacht unten</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Material</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_vonSchacht">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="2">
        <widget class="QLabel" name="label_6">
         <property name="text">
@@ -112,45 +153,16 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_material">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
+      <item row="4" column="4">
+       <widget class="QPushButton" name="button_load_base_data">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
-       </widget>
-      </item>
-      <item row="5" column="0" colspan="4">
-       <widget class="QTableWidget" name="table">
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
+        <property name="toolTip">
+         <string>Vorschau der Stammdaten. Druckprüfungen müssen eingelesen sein.</string>
         </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Haltungsbezeichnung</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Durchmesser</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_haltungnr">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
+         <string>Stammdaten Vorschau</string>
         </property>
        </widget>
       </item>
@@ -158,15 +170,193 @@
     </widget>
    </item>
    <item>
-    <layout class="QGridLayout" name="gridLayout_2" rowstretch="0">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>70</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Protokollierungslisten für Abgleich laden</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="0" colspan="2">
+       <widget class="QgsFileWidget" name="filepath_reach_protocol"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Bezeichnung Haltung Spaltennr.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Protokollierung optische Inspektion Haltung</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>Kommentar Spaltennr.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="reach_protocol_skip">
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QSpinBox" name="dp_protocol_name"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="reach_protocol_name"/>
+      </item>
+      <item row="0" column="2" colspan="2">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Protokollierung Dichtheitsprüfung</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Ergebnis opt. Beurteilung Spaltennr.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSpinBox" name="reach_protocol_result"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Bezeichnung Haltung Spaltennr.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QSpinBox" name="dp_protocol_skip">
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QSpinBox" name="dp_protocol_comment"/>
+      </item>
+      <item row="1" column="2" colspan="2">
+       <widget class="QgsFileWidget" name="filepath_dp_protocol"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Zeilen überspringen</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="button_preview_protocol_reach">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Vorschau</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Zeilen überspringen</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2" colspan="2">
+       <widget class="QPushButton" name="button_preview_dp_protocol">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Vorschau</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0">
      <property name="topMargin">
       <number>0</number>
      </property>
-     <property name="verticalSpacing">
-      <number>10</number>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="button_csv_export">
+       <property name="maximumSize">
+        <size>
+         <width>150</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Export Tabelle als CSV</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="combobox_filter"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_16">
+       <property name="maximumSize">
+        <size>
+         <width>150</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Filter für Tabelle</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="table">
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_5">
+     <property name="topMargin">
+      <number>0</number>
      </property>
      <item row="0" column="0">
       <widget class="QPushButton" name="button_create_point_layer">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="minimumSize">
         <size>
          <width>500</width>

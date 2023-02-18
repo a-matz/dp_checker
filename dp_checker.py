@@ -191,6 +191,7 @@ class dpChecker:
         if self.first_start == True:
             self.first_start = False
             self.dlg = dpCheckerDialog()
+            self.dlg.rejected.connect(self.close_dlg)
 
         # show the dialog
         self.dlg.show()
@@ -199,3 +200,7 @@ class dpChecker:
         # See if OK was pressed
         if result:
             pass
+
+    def close_dlg(self):
+        self.dlg.deleteLater()
+        self.first_start = True
