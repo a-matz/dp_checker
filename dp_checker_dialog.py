@@ -24,7 +24,7 @@
 
 import os
 import glob
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import pandas as pd
 import numpy as np
 import processing
@@ -36,12 +36,15 @@ from qgis.core import (QgsMapLayerProxyModel, QgsGeometry,
                       QgsProcessing)
 from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import Qt, QSignalBlocker, QVariant, pyqtSignal
-from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel,QDialogButtonBox
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel, QDialogButtonBox, QMessageBox
 import xml.etree.ElementTree as et
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'dp_checker_dialog_base.ui'))
 
+"""
+missing: Check if test method is air and not water
+"""
 
 class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
@@ -58,9 +61,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.fileWidget.fileChanged.connect(self.check_dp_path)
         self.button_create_point_layer.clicked.connect(self.create_points)
         self.button_preview_protocol_reach.clicked.connect(lambda checked, preview = True: self.load_reach_protocol(preview))
+        self.button_preview_dp_protocol.clicked.connect(lambda checked, preview = True: self.load_dp_protocol(preview))
         self.button_load_base_data.clicked.connect(lambda checked, preview = True: self.load_base_data_layer(preview))
         self.combobox_haltungnr.currentIndexChanged.connect(self.check_enable_basedata_button)
         self.button_csv_export.clicked.connect(self.select_csv_path)
+        self.combobox_filter.currentIndexChanged.connect(self.apply_filter)
+        self.button_load_extras.clicked.connect(self.load_and_join_extras)
 
         self.combobox_maplayer.setFilters(QgsMapLayerProxyModel.LineLayer)
 
@@ -88,6 +94,9 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         #read setvalues to check the tests
         self.setvalues = (pd.read_csv(os.path.join(os.path.dirname(__file__),"dpsollwerte.csv"))
                         .set_index("DN"))
+        
+        self.filter_list =  []
+        self.addFilter("")
     
     def update_crs(self):
         if self.combobox_maplayer.currentLayer() != None:
@@ -167,10 +176,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 dp_dict["Material"] = protocol.find("sewerMaterial").get("value")
             except:
                 dp_dict["Material"] = None
-            try:
-                dp_dict["Prüfung bestanden"] = bool(protocol.find("examPassed").get("value"))
-            except:
-                dp_dict["Prüfung bestanden"] = None
+            #try:
+            #    dp_dict["Prüfung bestanden"] = bool(protocol.find("examPassed").get("value"))
+            #except:
+            #    dp_dict["Prüfung bestanden"] = None
             try:
                 dp_dict["Ergebnis"] = protocol.find("classification").get("value")
             except:
@@ -193,11 +202,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             except:
                 dp_dict["Druckänderung"] = None
             try:
-                dp_dict["Prüfdauer"] = datetime.strptime(measurement.find("examDuration").get("value"),"%H:%M:%S")
+                dp_dict["Prüfzeit"] = datetime.strptime(measurement.find("examDuration").get("value"),"%H:%M:%S").time()
             except:
-                dp_dict["Prüfdauer"] = None
+                dp_dict["Prüfzeit"] = None
             try:
-                dp_dict["Beruhigungszeit"] = datetime.strptime(measurement.find("calmDuration").get("value"), "%H:%M:%S")
+                dp_dict["Beruhigungszeit"] = datetime.strptime(measurement.find("calmDuration").get("value"), "%H:%M:%S").time()
             except:
                 dp_dict["Beruhigungszeit"] = None
             
@@ -219,9 +228,9 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                     material_col = "andere"
 
                 calm = timedelta(seconds = int(pruefzeiten.beruhigungszeit))
-                dp_dict["Beruhigungszeit_soll"] = datetime.strptime(str(calm), "%H:%M:%S")
+                dp_dict["Beruhigungszeit_soll"] = datetime.strptime(str(calm), "%H:%M:%S").time()
                 test_time = timedelta(seconds = int(pruefzeiten[material_col])*pruefzeit_factor)
-                dp_dict["Prüfzeit_soll"] = datetime.strptime(str(test_time), "%H:%M:%S")
+                dp_dict["Prüfzeit_soll"] = datetime.strptime(str(test_time), "%H:%M:%S").time()
             
             else:
                 dp_dict["Beruhigungszeit_soll"] = None
@@ -242,6 +251,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 dp_dict["Datum"] = datetime.strptime(date, "%Y.%m.%d")
             except:
                 dp_dict["Datum"] = None
+            try:
+                date = gps_position_string = measurement.find("end").find("time").get("value")
+                dp_dict["Zeit"] = datetime.strptime(date, "%H:%M:%S").time()
+            except:
+                dp_dict["Zeit"] = None
             
             dp_dict["Datei"] = os.path.basename(dp_file)
 
@@ -252,10 +266,23 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         # update tableviewwidget
         self.update_table(self.dp_table)
         self.button_create_point_layer.setEnabled(True)
+        self.button_load_extras.setEnabled(True)
         self.check_enable_basedata_button()
-    
-    def update_table(self, data):
-        with QSignalBlocker(self.table) as block:
+
+        self.addFilter(["Falsche Beruhigungszeit", "Falsche Prüfzeit","Doppelte Prüfungen"])
+        
+    def addFilter(self, name):
+        with QSignalBlocker(self.combobox_filter):
+                if isinstance(name, str):
+                    name = [name]
+                for i in name:
+                    if i not in self.filter_list:
+                        self.filter_list.append(i)
+                self.combobox_filter.addItems(name)
+                self.combobox_filter.setCurrentIndex(-1)
+
+    def update_table(self, data, filter = False):
+        with QSignalBlocker(self.table):
 
             #tabelle.setItemDelegate(delegate)
             self.table.clear()
@@ -263,16 +290,13 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.table.setRowCount(0)
             self.table.setColumnCount(len(data.columns))
             self.table.setRowCount(len(data))        
-            print(data.dtypes)
-            for i, row in data.iterrows():
+            for i, (index,row) in enumerate(data.iterrows()):
                 for col,value in enumerate(row):
                     if value != None and not pd.isnull(value):
                         if isinstance(value,pd.datetime):
-                            # check if value is date or time, it is considered that no passed date is older than 2000
-                            if value > datetime.strptime("2000.01.01", "%Y.%m.%d"):
-                                value = value.strftime("%Y-%m-%d")   
-                            else:
-                                value = value.strftime("%H:%M:%S")
+                            value = value.strftime("%Y-%m-%d")   
+                        if isinstance(value, time):
+                            value = str(value)
                         item = QTableWidgetItem()
                         
                         #item.setData(Qt.EditRole, value)
@@ -284,7 +308,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.table.resizeColumnsToContents()
             self.table.setSortingEnabled(True)
             self.table.sortByColumn(0,Qt.AscendingOrder)
-        self.active_table = data
+        if not filter:
+            self.active_table = data
+        self.active_view = data
+        
         self.button_csv_export.setEnabled(True)
 
     def create_points(self):
@@ -326,7 +353,20 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         reach_name = self.reach_protocol_name.value()
         result = self.reach_protocol_result.value()
 
-        self.load_excel(path, skip, [reach_name,result], names, preview)
+        df = self.load_excel(path, skip, [reach_name,result], names)
+        if not preview:
+            return df
+    
+    def load_dp_protocol(self,preview):
+        path = self.filepath_dp_protocol.filePath()
+        names = ["Bezeichnung", "Kommentar"]
+        skip = self.dp_protocol_skip.value()
+        reach_name = self.dp_protocol_name.value()
+        comment = self.dp_protocol_comment.value()
+
+        df = self.load_excel(path, skip, [reach_name,comment], names)
+        if not preview:
+            return df
 
     def load_excel(self, path, skip_rows, read_cols,col_names, preview = True):
         """
@@ -335,17 +375,16 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         read_cols list: list of cols to import
         preview bool: if true loads to tableviewwidget, when fals function returns table
         """
-        print(preview)
         #col numbers to letters and remove name if colnr = 0
         letters_list = [] 
         remove_col = []
         for i,nr in enumerate(read_cols):
-            if nr != 0:
+            if nr > 0:
                 letters_list.append(chr(ord('@') + nr))
             else:
                 remove_col.append(i)
         if len(remove_col) > 0:
-            [col_names.pop(i) for i in remove_col.sort(reverse = True)]
+            [col_names.pop(i) for i in sorted(remove_col, reverse = True)]
 
         
 
@@ -359,8 +398,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         df.rename(columns = rename_dict, inplace = True)
         if preview:
             self.update_table(df)
-        else:
-            return df
+        return df
     
     def select_csv_path(self):
         dlg = saveCSV(self)
@@ -369,16 +407,21 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
     
     def export_to_csv(self,path):
         if path != None and path != "":
-            self.active_table.to_csv(path, sep = ";", decimal = ",", index = False, encoding = "cp1252")
+            self.active_view.to_csv(path, sep = ";", decimal = ",", index = False, encoding = "cp1252")
 
     def load_base_data_layer(self, preview, names_list = None):
+        """
+        names_list = list with all reach names to load
+        """
         layer = self.combobox_maplayer.currentLayer()
         subset = layer.subsetString()
         if names_list == None:
             names_list = self.dp_table["Bezeichnung"].tolist()
         names = "','".join(names_list)
         layer.setSubsetString(f"{self.combobox_haltungnr.currentField()} in ('{names}')")
-        print(self.combobox_dn.currentField())
+
+        if layer.featureCount() == 0:
+            QMessageBox.warning(self,"Keine Haltungen gefunden","Zu den aktuell gladenen Druckprüfungen wurde keine Haltungen gefunden.")
         # get not emtpy attributes
         attributes = {}
         for name, combobox in self.combobox_attribute.items():
@@ -399,14 +442,52 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             df_list.append(row_dict)
         df_base_data = pd.DataFrame(df_list)
 
+        layer.setSubsetString(subset)
         if preview:
             self.update_table(df_base_data)
         else:
             return df_base_data
-        
+    
+    def apply_filter(self):
+        query_name = self.combobox_filter.currentText()
 
-        
+        if query_name == "Falsche Beruhigungszeit":
+            query = "Beruhigungszeit < Beruhigungszeit_soll"
+            display_cols = ["Bezeichnung","Beruhigungszeit", "Beruhigungszeit_soll",
+                            "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
+                            "DN", "Material kürzel", "Material", "Ergebnis", "Datei"]
+            df_filter = self.active_table.query(query).loc[:,display_cols]
+        elif query_name == "Falsche Prüfzeit":
+            query = "Prüfzeit < Prüfzeit_soll"
+            display_cols = ["Bezeichnung","Beruhigungszeit", "Beruhigungszeit_soll",
+                            "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
+                            "DN", "Material kürzel", "Material", "Ergebnis", "Datei"]
+            df_filter = self.active_table.query(query).loc[:,display_cols]
+        elif query_name == "Doppelte Prüfungen":
+            reach = self.active_table["Bezeichnung"]
+            df_filter = self.active_table[reach.isin(reach[reach.duplicated()])].query("Datei != None")
+        else:
+            df_filter = self.active_table
 
+        self.update_table(df_filter, filter = True)
+    
+    def load_and_join_extras(self):
+        # dp protokolle self.dp_table
+        names = self.dp_table["Bezeichnung"].tolist()
+
+        if self.group_lists.isChecked():
+            if os.path.isfile(self.filepath_reach_protocol.filePath()):
+                # excel tv-inspection
+                tv_excel = self.load_reach_protocol(preview = False)
+                names.append(tv_excel["Bezeichnung"]).tolist()
+            if os.path.isfile(self.filepath_dp_protocol.filePath()):
+                # excel dp
+                dp_excel = self.load_dp_protocol(self,preview = False)
+                names.append(dp_excel["Bezeichnung"]).tolist()
+        
+        if self.group_base_data.isChecked():
+            self.load_base_data_layer(self, preview, names_list = np.unique(names).tolist())
+        
 
 
 
