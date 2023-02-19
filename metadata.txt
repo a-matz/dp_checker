@@ -10,7 +10,7 @@ version=0.1
 author=Armin Matzl
 email=arminmatzl@gmail.com
 
-about=Mit diesem Plugin können Dichtheitsprüfungen mit Luft des Systems Egger in Kombination mit den Attributen der zugehörigen Haltung auf inhaltlich geprüft werden. Dazu werden die *.sew-Dateien eingelesen und mit den Attributen der Haltung abgeglichen. Dabei werden einerseits die Stammdaten abgeglichen und andererseits die Einhaltung der ÖNorm B2503 geprüft.
+about=Mit diesem Plugin können Dichtheitsprüfungen von Freispiegelleitungen mit Luft des Systems Egger in Kombination mit den Attributen der zugehörigen Haltung auf inhaltlich geprüft werden. Dazu werden die *.sew-Dateien eingelesen und mit den Attributen der Haltung abgeglichen. Dabei werden einerseits die Stammdaten abgeglichen und andererseits die Einhaltung der ÖNorm B2503 geprüft.
 
 tracker=http://bugs
 repository=http://repo

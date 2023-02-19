@@ -24,7 +24,7 @@
 
 import os
 import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import processing
@@ -84,6 +84,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         
         self.combobox_maplayer.setCurrentIndex(-1)
         self.combobox_maplayer.layerChanged.connect(self.update_crs)
+
+        #read setvalues to check the tests
+        self.setvalues = (pd.read_csv(os.path.join(os.path.dirname(__file__),"dpsollwerte.csv"))
+                        .set_index("DN"))
     
     def update_crs(self):
         if self.combobox_maplayer.currentLayer() != None:
@@ -171,6 +175,17 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 dp_dict["Ergebnis"] = protocol.find("classification").get("value")
             except:
                 dp_dict["Ergebnis"] = None
+            
+            try:
+                dp_dict["dp_zulässig"] = round(float(protocol.find("allowedLoss").get("value")),2)
+            except:
+                dp_dict["dp_zulässig"] = 0
+            
+            try:
+                dp_dict["Prüfdruck"] = int(float(protocol.find("measurementPressure").get("value")))
+            except:
+                dp_dict["Prüfdruck"] = 0
+
             #measurement data
             measurement= xtree.find("document").find("data").find("measurement")
             try:
@@ -178,13 +193,40 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             except:
                 dp_dict["Druckänderung"] = None
             try:
-                dp_dict["Prüfdauer"] = datetime.strptime(measurement.find("examDuration").get("value"),"%H:%M:%S").time()
+                dp_dict["Prüfdauer"] = datetime.strptime(measurement.find("examDuration").get("value"),"%H:%M:%S")
             except:
                 dp_dict["Prüfdauer"] = None
             try:
-                dp_dict["Beruhigungszeit"] = datetime.strptime(measurement.find("calmDuration").get("value"), "%H:%M:%S").time()
+                dp_dict["Beruhigungszeit"] = datetime.strptime(measurement.find("calmDuration").get("value"), "%H:%M:%S")
             except:
                 dp_dict["Beruhigungszeit"] = None
+            
+            
+            if dp_dict["DN"] != None and dp_dict["Material kürzel"] != None:
+                pruef_dn = min(self.setvalues.index, key=lambda x:abs(x-dp_dict["DN"]))
+                pruefzeiten = self.setvalues.loc[pruef_dn]
+                if dp_dict["dp_zulässig"] == 15 or (dp_dict["dp_zulässig"] == 10 and pruef_dn >= 1100):
+                    pruefzeit_factor = 1
+                elif dp_dict["dp_zulässig"] == 7.5 or (dp_dict["dp_zulässig"] == 5 and pruef_dn >= 1100):
+                    pruefzeit_factor = 0.5
+
+
+        
+
+                if dp_dict["Material kürzel"].lower() in ("b", "stb", "ob", "pc","pcc", "sfb", "spb", "sb", "szb"):
+                    material_col = "beton"
+                else:
+                    material_col = "andere"
+
+                calm = timedelta(seconds = int(pruefzeiten.beruhigungszeit))
+                dp_dict["Beruhigungszeit_soll"] = datetime.strptime(str(calm), "%H:%M:%S")
+                test_time = timedelta(seconds = int(pruefzeiten[material_col])*pruefzeit_factor)
+                dp_dict["Prüfzeit_soll"] = datetime.strptime(str(test_time), "%H:%M:%S")
+            
+            else:
+                dp_dict["Beruhigungszeit_soll"] = None
+                dp_dict["Prüfzeit_soll"] = None
+
 
             #gps position at stop
             try:
@@ -221,7 +263,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.table.setRowCount(0)
             self.table.setColumnCount(len(data.columns))
             self.table.setRowCount(len(data))        
-            
+            print(data.dtypes)
             for i, row in data.iterrows():
                 for col,value in enumerate(row):
                     if value != None and not pd.isnull(value):
@@ -361,6 +403,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.update_table(df_base_data)
         else:
             return df_base_data
+        
+
         
 
 
