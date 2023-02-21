@@ -87,6 +87,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         for combobox in self.combobox_attribute.values():
             self.combobox_maplayer.layerChanged.connect(combobox.setLayer)
             self.combobox_maplayer.layerChanged.connect(lambda layer, combobox = combobox: self.combobox_reset_index(combobox))
+        self.combobox_maplayer.layerChanged.connect(self.reach_expression.setLayer)
         
         self.combobox_maplayer.setCurrentIndex(-1)
         self.combobox_maplayer.layerChanged.connect(self.update_crs)
@@ -110,8 +111,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
     def check_enable_basedata_button(self):
         if self.combobox_haltungnr.currentIndex() not in (-1,0) and self.combobox_maplayer.currentLayer != None and self.button_create_point_layer.isEnabled():
             self.button_load_base_data.setEnabled(True)
+            self.reach_expression.setEnabled(True)
+
         else:
             self.button_load_base_data.setEnabled(False)
+            self.reach_expression.setEnabled(False)
 
     def check_dp_path(self):
         """
@@ -278,7 +282,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 for i in name:
                     if i not in self.filter_list:
                         self.filter_list.append(i)
-                self.combobox_filter.addItems(name)
+                        self.combobox_filter.addItem(i)
                 self.combobox_filter.setCurrentIndex(-1)
 
     def update_table(self, data, filter = False):
@@ -353,7 +357,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         reach_name = self.reach_protocol_name.value()
         result = self.reach_protocol_result.value()
 
-        df = self.load_excel(path, skip, [reach_name,result], names)
+        df = self.load_excel(path, skip, [reach_name,result], names, preview)
         if not preview:
             return df
     
@@ -409,7 +413,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         if path != None and path != "":
             self.active_view.to_csv(path, sep = ";", decimal = ",", index = False, encoding = "cp1252")
 
-    def load_base_data_layer(self, preview, names_list = None):
+    def load_base_data_layer(self, preview, names_list = None, filter = None):
         """
         names_list = list with all reach names to load
         """
@@ -418,7 +422,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         if names_list == None:
             names_list = self.dp_table["Bezeichnung"].tolist()
         names = "','".join(names_list)
-        layer.setSubsetString(f"{self.combobox_haltungnr.currentField()} in ('{names}')")
+        if names_list != None and filter == None:
+            print(names_list)
+            layer.setSubsetString(f"{self.combobox_haltungnr.currentField()} in ('{names}')")
+        elif filter != None:
+            print(filter)
+            layer.setSubsetString(filter)
 
         if layer.featureCount() == 0:
             QMessageBox.warning(self,"Keine Haltungen gefunden","Zu den aktuell gladenen Druckprüfungen wurde keine Haltungen gefunden.")
@@ -474,19 +483,30 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
     def load_and_join_extras(self):
         # dp protokolle self.dp_table
         names = self.dp_table["Bezeichnung"].tolist()
-
+        tab_show = self.dp_table
         if self.group_lists.isChecked():
             if os.path.isfile(self.filepath_reach_protocol.filePath()):
                 # excel tv-inspection
                 tv_excel = self.load_reach_protocol(preview = False)
-                names.append(tv_excel["Bezeichnung"]).tolist()
+                names.append(tv_excel["Bezeichnung"].tolist())
+                tab_show = tab_show.merge(tv_excel, on = "Bezeichnung", how = "outer")
             if os.path.isfile(self.filepath_dp_protocol.filePath()):
                 # excel dp
                 dp_excel = self.load_dp_protocol(self,preview = False)
-                names.append(dp_excel["Bezeichnung"]).tolist()
+                names.append(dp_excel["Bezeichnung"].tolist())
+                tab_show = tab_show.merge(dp_excel, on = "Bezeichnung", how = "outer")
         
         if self.group_base_data.isChecked():
-            self.load_base_data_layer(self, preview, names_list = np.unique(names).tolist())
+            if self.reach_expression.currentText == "" or not self.reach_expression.isValidExpression():
+                print("not valid")
+                df_base_layer = self.load_base_data_layer(preview = False, names_list = np.unique(names).tolist())
+            else:
+                print("valid")
+                print(self.reach_expression.currentText())
+                df_base_layer = self.load_base_data_layer(preview = False, filter = self.reach_expression.currentText())
+            tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
+        
+        self.update_table(tab_show)
         
 
 

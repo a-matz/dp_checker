@@ -55,38 +55,40 @@
       <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
         <property name="text">
-         <string>Schacht unten</string>
+         <string>Layer der Haltungen</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
+      <item row="4" column="4">
+       <widget class="QPushButton" name="button_load_base_data">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Vorschau der Stammdaten. Druckprüfungen müssen eingelesen sein.</string>
+        </property>
+        <property name="text">
+         <string>Stammdaten Vorschau</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Durchmesser</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Schacht oben</string>
-        </property>
-       </widget>
+      <item row="6" column="0" colspan="5">
+       <widget class="QgsFieldExpressionWidget" name="reach_expression"/>
       </item>
       <item row="4" column="3">
        <widget class="QgsFieldComboBox" name="combobox_material">
         <property name="allowEmptyFieldName">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Länge</string>
         </property>
        </widget>
       </item>
@@ -97,17 +99,31 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
-        <property name="allowEmptyLayer">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="4" column="2">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Material</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Schacht unten</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Schacht oben</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
+        <property name="allowEmptyLayer">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -125,13 +141,6 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_dn">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="3">
        <widget class="QgsFieldComboBox" name="combobox_laenge">
         <property name="allowEmptyFieldName">
@@ -139,30 +148,31 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Layer der Haltungen</string>
+         <string>Durchmesser</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="2">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Länge</string>
+      <item row="1" column="3">
+       <widget class="QgsFieldComboBox" name="combobox_dn">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="4" column="4">
-       <widget class="QPushButton" name="button_load_base_data">
-        <property name="enabled">
-         <bool>false</bool>
+      <item row="4" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
         </property>
-        <property name="toolTip">
-         <string>Vorschau der Stammdaten. Druckprüfungen müssen eingelesen sein.</string>
-        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="3">
+       <widget class="QLabel" name="label_17">
         <property name="text">
-         <string>Stammdaten Vorschau</string>
+         <string>Haltungen filtern, für die Dichtheitsprüfung durchgeführt werden soll (optional)</string>
         </property>
        </widget>
       </item>
@@ -277,7 +287,7 @@
       <item row="5" column="0" colspan="2">
        <widget class="QPushButton" name="button_preview_protocol_reach">
         <property name="enabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="text">
          <string>Vorschau</string>
@@ -294,7 +304,7 @@
       <item row="5" column="2" colspan="2">
        <widget class="QPushButton" name="button_preview_dp_protocol">
         <property name="enabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="text">
          <string>Vorschau</string>
@@ -361,6 +371,39 @@
     </widget>
    </item>
    <item>
+    <layout class="QGridLayout" name="gridLayout_6">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="verticalSpacing">
+      <number>7</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="button_del_row">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Dichtheitsprüfung ignorieren</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QGridLayout" name="gridLayout_5">
      <property name="topMargin">
       <number>0</number>
@@ -403,6 +446,11 @@
    <class>QgsFieldComboBox</class>
    <extends>QComboBox</extends>
    <header>qgsfieldcombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsFieldExpressionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsfieldexpressionwidget.h</header>
   </customwidget>
   <customwidget>
    <class>QgsFileWidget</class>
