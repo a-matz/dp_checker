@@ -58,15 +58,19 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
 
         self.button_load_dp.clicked.connect(self.load_dp_files)
+        self.button_load_dp.clicked.connect(self.update_filter)
         self.fileWidget.fileChanged.connect(self.check_dp_path)
         self.button_create_point_layer.clicked.connect(self.create_points)
         self.button_preview_protocol_reach.clicked.connect(lambda checked, preview = True: self.load_reach_protocol(preview))
+        self.filepath_reach_protocol.fileChanged.connect(lambda file, button = self.button_preview_protocol_reach: self.check_excel_filepath(file,button))
+        self.filepath_dp_protocol.fileChanged.connect(lambda file, button = self.button_preview_dp_protocol: self.check_excel_filepath(file,button))
         self.button_preview_dp_protocol.clicked.connect(lambda checked, preview = True: self.load_dp_protocol(preview))
         self.button_load_base_data.clicked.connect(lambda checked, preview = True: self.load_base_data_layer(preview))
         self.combobox_haltungnr.currentIndexChanged.connect(self.check_enable_basedata_button)
         self.button_csv_export.clicked.connect(self.select_csv_path)
         self.combobox_filter.currentIndexChanged.connect(self.apply_filter)
         self.button_load_extras.clicked.connect(self.load_and_join_extras)
+        self.button_load_extras.clicked.connect(self.update_filter)
 
         self.combobox_maplayer.setFilters(QgsMapLayerProxyModel.LineLayer)
 
@@ -97,7 +101,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                         .set_index("DN"))
         
         self.filter_list =  []
-        self.addFilter("")
+        #self.addFilter("")
     
     def update_crs(self):
         if self.combobox_maplayer.currentLayer() != None:
@@ -107,6 +111,13 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def combobox_reset_index(self,combobox):
         combobox.setCurrentIndex(-1)
+    
+    def check_excel_filepath(self, file, button):
+        if os.path.isfile(file) and file.endswith(".xlsx"):
+            button.setEnabled(True)
+        else:
+            button.setEnabled(False)
+
     
     def check_enable_basedata_button(self):
         if self.combobox_haltungnr.currentIndex() not in (-1,0) and self.combobox_maplayer.currentLayer != None and self.button_create_point_layer.isEnabled():
@@ -273,19 +284,43 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.button_load_extras.setEnabled(True)
         self.check_enable_basedata_button()
 
-        self.addFilter(["Falsche Beruhigungszeit", "Falsche Prüfzeit","Doppelte Prüfungen"])
-        
+        #self.addFilter(["Falsche Beruhigungszeit", "Falsche Prüfzeit","Doppelte Prüfungen"])
+    
+    def update_filter(self, preview = False):
+        filter = [""]
+        if not preview:
+            if self.button_load_dp.isEnabled():
+                filter.extend(["Falsche Beruhigungszeit","Falsche Prüfzeit","Doppelte Prüfungen","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein"])
+            if self.group_base_data.isChecked() and self.button_load_base_data.isEnabled():
+                filter.extend(["keine Druckprüfung vorhanden","Stammdatenablgeich: Länge","Stammdatenablgeich: Länge (1m Toleranz)"])
+                if self.combobox_vonSchacht.currentText() != "":
+                    filter.append("Stammdatenablgeich: Schacht oben")
+                if self.combobox_bisSchacht.currentText() != "":
+                    filter.append("Stammdatenablgeich: Schacht unten")
+                if self.combobox_dn.currentText() != "":
+                    filter.append("Stammdatenabgleich: DN")
+                if self.combobox_material.currentText() != "":
+                    filter.append("Stammdatenablgeich: Material")
+
+            if self.group_lists.isChecked() and self.button_preview_protocol_reach.isEnabled():
+                filter.append("Druckprüfung fehlt - optische Beurteilung vorhanden")
+
+        self.addFilter(filter)
+
     def addFilter(self, name):
         with QSignalBlocker(self.combobox_filter):
-                if isinstance(name, str):
-                    name = [name]
-                for i in name:
-                    if i not in self.filter_list:
-                        self.filter_list.append(i)
-                        self.combobox_filter.addItem(i)
-                self.combobox_filter.setCurrentIndex(-1)
+            self.combobox_filter.clear()
+            self.filter_list = []
+            if isinstance(name, str):
+                name = [name]
+            for i in name:
+                if i not in self.filter_list:
+                    self.filter_list.append(i)
+                    self.combobox_filter.addItem(i)
+            self.combobox_filter.setCurrentIndex(-1)
 
     def update_table(self, data, filter = False):
+        self.setCursor(Qt.WaitCursor)
         with QSignalBlocker(self.table):
 
             #tabelle.setItemDelegate(delegate)
@@ -317,6 +352,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.active_view = data
         
         self.button_csv_export.setEnabled(True)
+        self.setCursor(Qt.ArrowCursor)
 
     def create_points(self):
         layer = QgsVectorLayer("point?crs=epsg:4326", "punkte", "memory")
@@ -358,6 +394,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         result = self.reach_protocol_result.value()
 
         df = self.load_excel(path, skip, [reach_name,result], names, preview)
+        df = df[~df.Bezeichnung.isnull()]
         if not preview:
             return df
     
@@ -369,6 +406,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         comment = self.dp_protocol_comment.value()
 
         df = self.load_excel(path, skip, [reach_name,comment], names)
+        df = df[~df.Bezeichnung.isnull()]
         if not preview:
             return df
 
@@ -402,6 +440,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         df.rename(columns = rename_dict, inplace = True)
         if preview:
             self.update_table(df)
+            self.combobox_filter.clear()
         return df
     
     def select_csv_path(self):
@@ -423,10 +462,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             names_list = self.dp_table["Bezeichnung"].tolist()
         names = "','".join(names_list)
         if names_list != None and filter == None:
-            print(names_list)
             layer.setSubsetString(f"{self.combobox_haltungnr.currentField()} in ('{names}')")
         elif filter != None:
-            print(filter)
             layer.setSubsetString(filter)
 
         if layer.featureCount() == 0:
@@ -454,6 +491,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         layer.setSubsetString(subset)
         if preview:
             self.update_table(df_base_data)
+            self.combobox_filter.clear()
         else:
             return df_base_data
     
@@ -475,36 +513,93 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         elif query_name == "Doppelte Prüfungen":
             reach = self.active_table["Bezeichnung"]
             df_filter = self.active_table[reach.isin(reach[reach.duplicated()])].query("Datei != None")
+        elif query_name == "Stammdatenabgleich: DN":
+            display_cols = ["Bezeichnung","DN","DN_Haltung"]
+            df_filter = self.active_table.query("DN != DN_Haltung").loc[:,display_cols]
+        elif query_name == "Stammdatenablgeich: Länge":
+            display_cols = ["Bezeichnung","Länge","Länge_Haltung"]
+            df_filter = self.active_table.query("Länge != Länge_Haltung").loc[:,display_cols]
+        elif query_name == "Stammdatenablgeich: Länge (1m Toleranz)":
+            display_cols = ["Bezeichnung","Länge","Länge_Haltung"]
+            df_filter = self.active_table.query("(Länge - Länge_Haltung) > 1 ").loc[:,display_cols]
+        elif query_name == "Stammdatenablgeich: Schacht oben":
+            display_cols = ["Bezeichnung","Schacht oben","Schacht oben_Haltung", "Schacht unten"]
+            if "Schacht unten_Haltung" in self.active_table.columns:
+                display_cols.append("Schacht unten_Haltung")
+            df_filter = self.active_table.query("`Schacht oben` != `Schacht oben_Haltung`").loc[:,display_cols]
+        elif query_name == "Stammdatenablgeich: Schacht unten":
+            display_cols = ["Bezeichnung","Schacht oben"]
+            if "Schacht oben_Haltung" in self.active_table.columns:
+                display_cols.append("Schacht oben_Haltung")
+            display_cols.extend(["Schacht unten", "Schacht unten_Haltung"])
+            df_filter = self.active_table.query("`Schacht unten` != `Schacht unten_Haltung`").loc[:,display_cols]
+        elif query_name == "Stammdatenablgeich: Material":
+            display_cols = ["Bezeichnung","Material kürzel", "Material_Haltung"]
+            df_filter = self.active_table.query("`Material kürzel` != Material_Haltung").loc[:,display_cols]
+        elif query_name == "Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein":
+            display_cols = ["Bezeichnung","DN","Material","dp_zulässig","Druckänderung","Ergebnis"]
+            if "Kommentar" in self.active_table.columns:
+                display_cols.append("Kommentar")
+            df_filter = self.active_table.query("(abs(dp_zulässig)*-1 < Druckänderung and Ergebnis == 'undicht') or (abs(dp_zulässig)*-1 > Druckänderung and Ergebnis == 'dicht')").loc[:,display_cols]
+        elif query_name == "Druckprüfung fehlt - optische Beurteilung vorhanden":
+            display_cols = ["Bezeichnung","Ergebnis","Ergebnis OI", "DN", "Material"]
+            if "Kommentar" in self.active_table.columns:
+                display_cols.append("Kommentar")
+            df_filter = self.active_table[self.active_table["Ergebnis OI"].str.lower() == "optisch dicht" & self.active_table.Ergebnis.isnull()].loc[:,display_cols]
+        elif query_name == "keine Druckprüfung vorhanden":
+            display_cols = ["Bezeichnung","Ergebnis","DN", "Material"]
+            if "Kommentar" in self.active_table.columns:
+                display_cols.append("Kommentar")
+            if "Ergebnis OI" in self.active_table.columns:
+                display_cols.append("Ergebnis OI")
+            df_filter = self.active_table[self.active_table.Ergebnis.isnull()]
         else:
             df_filter = self.active_table
 
         self.update_table(df_filter, filter = True)
-    
+
+
     def load_and_join_extras(self):
         # dp protokolle self.dp_table
-        names = self.dp_table["Bezeichnung"].tolist()
         tab_show = self.dp_table
-        if self.group_lists.isChecked():
-            if os.path.isfile(self.filepath_reach_protocol.filePath()):
-                # excel tv-inspection
-                tv_excel = self.load_reach_protocol(preview = False)
-                names.append(tv_excel["Bezeichnung"].tolist())
-                tab_show = tab_show.merge(tv_excel, on = "Bezeichnung", how = "outer")
-            if os.path.isfile(self.filepath_dp_protocol.filePath()):
-                # excel dp
-                dp_excel = self.load_dp_protocol(self,preview = False)
-                names.append(dp_excel["Bezeichnung"].tolist())
-                tab_show = tab_show.merge(dp_excel, on = "Bezeichnung", how = "outer")
+        
         
         if self.group_base_data.isChecked():
             if self.reach_expression.currentText == "" or not self.reach_expression.isValidExpression():
-                print("not valid")
+                if self.group_lists.isChecked():
+                    if os.path.isfile(self.filepath_reach_protocol.filePath()):
+                        # excel tv-inspection
+                        tv_excel = self.load_reach_protocol(preview = False)
+                        tab_show = tab_show.merge(tv_excel, on = "Bezeichnung", how = "outer")
+                    if os.path.isfile(self.filepath_dp_protocol.filePath()):
+                        # excel dp
+                        dp_excel = self.load_dp_protocol(preview = False)
+                        tab_show = tab_show.merge(dp_excel, on = "Bezeichnung", how = "outer")
+                names = tab_show["Bezeichnung"].tolist()
                 df_base_layer = self.load_base_data_layer(preview = False, names_list = np.unique(names).tolist())
+                tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
             else:
-                print("valid")
-                print(self.reach_expression.currentText())
                 df_base_layer = self.load_base_data_layer(preview = False, filter = self.reach_expression.currentText())
-            tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
+                tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
+
+                if os.path.isfile(self.filepath_reach_protocol.filePath()):
+                    # excel tv-inspection
+                    tv_excel = self.load_reach_protocol(preview = False)
+                    tab_show = tab_show.merge(tv_excel, on = "Bezeichnung", how = "left")
+                if os.path.isfile(self.filepath_dp_protocol.filePath()):
+                    # excel dp
+                    dp_excel = self.load_dp_protocol(preview = False)
+                    tab_show = tab_show.merge(dp_excel, on = "Bezeichnung", how = "left")
+
+        elif self.group_lists.isChecked():
+            if os.path.isfile(self.filepath_reach_protocol.filePath()):
+                # excel tv-inspection
+                tv_excel = self.load_reach_protocol(preview = False)
+                tab_show = tab_show.merge(tv_excel, on = "Bezeichnung", how = "outer")
+            if os.path.isfile(self.filepath_dp_protocol.filePath()):
+                # excel dp
+                dp_excel = self.load_dp_protocol(preview = False)
+                tab_show = tab_show.merge(dp_excel, on = "Bezeichnung", how = "outer")
         
         self.update_table(tab_show)
         
