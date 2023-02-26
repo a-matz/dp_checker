@@ -55,75 +55,10 @@
       <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Layer der Haltungen</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="4">
-       <widget class="QPushButton" name="button_load_base_data">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="toolTip">
-         <string>Vorschau der Stammdaten. Druckprüfungen müssen eingelesen sein.</string>
-        </property>
-        <property name="text">
-         <string>Stammdaten Vorschau</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0" colspan="5">
-       <widget class="QgsFieldExpressionWidget" name="reach_expression"/>
-      </item>
-      <item row="4" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_material">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Länge</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_haltungnr">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Material</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Schacht unten</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Schacht oben</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
-        <property name="allowEmptyLayer">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -141,8 +76,52 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_laenge">
+      <item row="7" column="0" colspan="5">
+       <widget class="QgsFieldExpressionWidget" name="reach_expression"/>
+      </item>
+      <item row="6" column="0" colspan="3">
+       <widget class="QLabel" name="label_17">
+        <property name="text">
+         <string>Haltungen filtern, für die Dichtheitsprüfung durchgeführt werden soll (optional)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
+       <widget class="QPushButton" name="button_load_base_data">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Vorschau der Stammdaten. Druckprüfungen müssen eingelesen sein.</string>
+        </property>
+        <property name="text">
+         <string>Stammdaten Vorschau</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Schacht unten</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
+        <property name="allowEmptyLayer">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_haltungnr">
         <property name="allowEmptyFieldName">
          <bool>true</bool>
         </property>
@@ -155,6 +134,13 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Layer der Haltungen</string>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="3">
        <widget class="QgsFieldComboBox" name="combobox_dn">
         <property name="allowEmptyFieldName">
@@ -162,17 +148,31 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
+      <item row="3" column="3">
+       <widget class="QgsFieldComboBox" name="combobox_material">
         <property name="allowEmptyFieldName">
          <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="3">
-       <widget class="QLabel" name="label_17">
+      <item row="4" column="3">
+       <widget class="QgsFieldComboBox" name="combobox_laenge">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Haltungen filtern, für die Dichtheitsprüfung durchgeführt werden soll (optional)</string>
+         <string>Länge</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Material</string>
         </property>
        </widget>
       </item>
@@ -203,7 +203,7 @@
       <item row="3" column="2">
        <widget class="QLabel" name="label_12">
         <property name="text">
-         <string>Bezeichnung Haltung Spaltennr.</string>
+         <string>Bezeichnung Haltung Spaltennummer</string>
         </property>
        </widget>
       </item>
@@ -217,7 +217,7 @@
       <item row="4" column="2">
        <widget class="QLabel" name="label_15">
         <property name="text">
-         <string>Kommentar Spaltennr.</string>
+         <string>Kommentar Spaltennummer</string>
         </property>
        </widget>
       </item>
@@ -247,7 +247,7 @@
       <item row="4" column="0">
        <widget class="QLabel" name="label_14">
         <property name="text">
-         <string>Ergebnis opt. Beurteilung Spaltennr.</string>
+         <string>Ergebnis opt. Beurteilung Spaltennummer</string>
         </property>
        </widget>
       </item>
@@ -257,7 +257,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Bezeichnung Haltung Spaltennr.</string>
+         <string>Bezeichnung Haltung Spaltennummer</string>
         </property>
        </widget>
       </item>
@@ -379,7 +379,7 @@
       <number>7</number>
      </property>
      <item row="0" column="0">
-      <widget class="QPushButton" name="button_del_row">
+      <widget class="QPushButton" name="button_ignore_file">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -468,6 +468,34 @@
    <header>qgsprojectionselectionwidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>button_load_dp</tabstop>
+  <tabstop>group_base_data</tabstop>
+  <tabstop>combobox_maplayer</tabstop>
+  <tabstop>combobox_haltungnr</tabstop>
+  <tabstop>combobox_vonSchacht</tabstop>
+  <tabstop>combobox_bisSchacht</tabstop>
+  <tabstop>combobox_dn</tabstop>
+  <tabstop>combobox_material</tabstop>
+  <tabstop>combobox_laenge</tabstop>
+  <tabstop>button_load_base_data</tabstop>
+  <tabstop>group_lists</tabstop>
+  <tabstop>reach_protocol_skip</tabstop>
+  <tabstop>reach_protocol_name</tabstop>
+  <tabstop>reach_protocol_result</tabstop>
+  <tabstop>button_preview_protocol_reach</tabstop>
+  <tabstop>dp_protocol_skip</tabstop>
+  <tabstop>dp_protocol_name</tabstop>
+  <tabstop>dp_protocol_comment</tabstop>
+  <tabstop>button_preview_dp_protocol</tabstop>
+  <tabstop>button_load_extras</tabstop>
+  <tabstop>combobox_filter</tabstop>
+  <tabstop>button_csv_export</tabstop>
+  <tabstop>table</tabstop>
+  <tabstop>button_ignore_file</tabstop>
+  <tabstop>button_create_point_layer</tabstop>
+  <tabstop>projection</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
