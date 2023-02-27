@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1034</width>
+    <width>1120</width>
     <height>929</height>
    </rect>
   </property>
@@ -55,10 +55,30 @@
       <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="3">
+       <widget class="QLabel" name="label_5">
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Durchmesser</string>
+        </property>
+       </widget>
+      </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Schacht oben</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Länge*</string>
         </property>
        </widget>
       </item>
@@ -69,24 +89,51 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Layer der Haltungen</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="6">
+       <widget class="QgsFieldExpressionWidget" name="reach_expression"/>
+      </item>
+      <item row="3" column="4">
+       <widget class="QgsFieldComboBox" name="combobox_material">
+        <property name="allowEmptyFieldName">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
+        <property name="allowEmptyLayer">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Haltungsbezeichnung</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="0" colspan="5">
-       <widget class="QgsFieldExpressionWidget" name="reach_expression"/>
-      </item>
-      <item row="6" column="0" colspan="3">
-       <widget class="QLabel" name="label_17">
-        <property name="text">
-         <string>Haltungen filtern, für die Dichtheitsprüfung durchgeführt werden soll (optional)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="4">
+      <item row="4" column="5">
        <widget class="QPushButton" name="button_load_base_data">
         <property name="enabled">
          <bool>false</bool>
@@ -106,20 +153,6 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QgsFieldComboBox" name="combobox_bisSchacht">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QgsMapLayerComboBox" name="combobox_maplayer">
-        <property name="allowEmptyLayer">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="1">
        <widget class="QgsFieldComboBox" name="combobox_haltungnr">
         <property name="allowEmptyFieldName">
@@ -127,52 +160,54 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Durchmesser</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Layer der Haltungen</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
+      <item row="1" column="4">
        <widget class="QgsFieldComboBox" name="combobox_dn">
         <property name="allowEmptyFieldName">
          <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="3" column="3">
-       <widget class="QgsFieldComboBox" name="combobox_material">
-        <property name="allowEmptyFieldName">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
+      <item row="4" column="4">
        <widget class="QgsFieldComboBox" name="combobox_laenge">
         <property name="allowEmptyFieldName">
          <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="4" column="2">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Länge</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
+      <item row="3" column="3">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Material</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Maximum</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>70</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="6" column="0" colspan="3">
+       <widget class="QLabel" name="label_17">
+        <property name="text">
+         <string>Haltungen filtern, für die Dichtheitsprüfung durchgeführt werden soll (optional)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3" colspan="3">
+       <widget class="QLabel" name="label_18">
+        <property name="text">
+         <string>* wenn kein Attribut für die Länge gewählt ist, wird die Haltungslänge aus der Geometrie ermittelt</string>
         </property>
        </widget>
       </item>
@@ -315,11 +350,68 @@
     </widget>
    </item>
    <item>
-    <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0">
+    <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0,0">
      <property name="topMargin">
       <number>0</number>
      </property>
-     <item row="1" column="2">
+     <item row="2" column="2">
+      <widget class="QComboBox" name="combobox_filter"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="label_16">
+       <property name="maximumSize">
+        <size>
+         <width>150</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>Datenprüfung:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLineEdit" name="filter_name">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>180</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="placeholderText">
+        <string>Filter für Bezeichnung</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="button_load_extras">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Stammdaten und Listen laden</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
       <widget class="QPushButton" name="button_csv_export">
        <property name="enabled">
         <bool>false</bool>
@@ -332,32 +424,6 @@
        </property>
        <property name="text">
         <string>Tabelle als CSV exportieren</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="combobox_filter"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_16">
-       <property name="maximumSize">
-        <size>
-         <width>150</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Filter für Tabelle</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QPushButton" name="button_load_extras">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Stammdaten und Listen laden</string>
        </property>
       </widget>
      </item>
@@ -488,7 +554,6 @@
   <tabstop>dp_protocol_name</tabstop>
   <tabstop>dp_protocol_comment</tabstop>
   <tabstop>button_preview_dp_protocol</tabstop>
-  <tabstop>button_load_extras</tabstop>
   <tabstop>combobox_filter</tabstop>
   <tabstop>button_csv_export</tabstop>
   <tabstop>table</tabstop>

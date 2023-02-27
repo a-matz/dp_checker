@@ -76,6 +76,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.group_base_data.toggled.connect(self.check_button_load_extras)
         self.group_lists.toggled.connect(self.check_button_load_extras)
         self.button_ignore_file.clicked.connect(self.ignore_file)
+        self.filter_name.textEdited.connect(self.apply_filter)
 
         self.combobox_maplayer.setFilters(QgsMapLayerProxyModel.LineLayer)
 
@@ -86,11 +87,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.projection.setCrs(QgsCoordinateReferenceSystem(3857))
         self.combobox_attribute = {
             "Bezeichnung" : self.combobox_haltungnr,
-            "Schacht oben_Haltung" : self.combobox_vonSchacht,
-            "Schacht unten_Haltung" : self.combobox_bisSchacht,
-            "DN_Haltung" : self.combobox_dn,
-            "Länge_Haltung" : self.combobox_laenge,
-            "Material_Haltung" : self.combobox_material
+            "Schacht oben_Stammdaten" : self.combobox_vonSchacht,
+            "Schacht unten_Stammdaten" : self.combobox_bisSchacht,
+            "DN_Stammdaten" : self.combobox_dn,
+            "Länge_Stammdaten" : self.combobox_laenge,
+            "Material_Stammdaten" : self.combobox_material
         }
 
         for combobox in self.combobox_attribute.values():
@@ -300,6 +301,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         # update tableviewwidget
         self.update_table(self.dp_table)
         self.button_create_point_layer.setEnabled(True)
+        self.filter_name.setEnabled(True)
         self.check_enable_basedata_button()
         self.setCursor(Qt.ArrowCursor)
         #self.addFilter(["Falsche Beruhigungszeit", "Falsche Prüfzeit","Doppelte Prüfungen"])
@@ -308,7 +310,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         filter = [""]
         if not preview:
             if self.button_load_dp.isEnabled():
-                filter.extend(["Falsche Beruhigungszeit","Falsche Prüfzeit","Doppelte Prüfungen / Listeineinträge","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein"])
+                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein"])
             if not only_dp:
                 if self.group_base_data.isChecked() and self.button_load_base_data.isEnabled():
                     filter.extend(["keine Druckprüfung vorhanden","Fehler in Stammdatenabgleich: Länge","Fehler in Stammdatenabgleich: Länge (1m Toleranz)"])
@@ -337,9 +339,17 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                     self.filter_list.append(i)
                     self.combobox_filter.addItem(i)
             self.combobox_filter.setCurrentIndex(-1)
-
+    
     def update_table(self, data, filter = False):
         self.setCursor(Qt.WaitCursor)
+        if self.filter_name.text() != "":
+            if filter:
+                data = data[data.Bezeichnung.str.lower().str.startswith(self.filter_name.text().lower())]
+            else:
+                with QSignalBlocker(self.filter_name):
+                    self.filter_name.setText("")
+
+
         if "Datei" in data.columns:
             data = data[~data.Datei.isin(self.ignored_file_list)]
         with QSignalBlocker(self.table):
@@ -519,7 +529,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         for name, combobox in self.combobox_attribute.items():
             if combobox.currentField() != "" and combobox.currentField() != None:
                 attributes[name] = combobox.currentField()
-        if "Länge_Haltung" not in attributes.keys():
+        if "Länge_Stammdaten" not in attributes.keys():
             length_from_geom = True
         else:
             length_from_geom = False
@@ -530,7 +540,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             for name, attribute in attributes.items():
                 row_dict[name] = feature.attribute(attribute)
             if length_from_geom:
-                row_dict["Länge_Haltung"] = round(feature.geometry().length(),2)
+                row_dict["Länge_Stammdaten"] = round(feature.geometry().length(),2)
             df_list.append(row_dict)
         df_base_data = pd.DataFrame(df_list)
 
@@ -547,54 +557,64 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if query_name == "Falsche Beruhigungszeit":
             query = "Beruhigungszeit < Beruhigungszeit_soll"
-            display_cols = ["Bezeichnung","Beruhigungszeit", "Beruhigungszeit_soll",
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Beruhigungszeit", "Beruhigungszeit_soll",
                             "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
                             "DN", "Material kürzel", "Material", "Ergebnis", "Datei"]
             df_filter = self.active_table.query(query).loc[:,display_cols]
         elif query_name == "Falsche Prüfzeit":
             query = "Prüfzeit < Prüfzeit_soll"
-            display_cols = ["Bezeichnung","Beruhigungszeit", "Beruhigungszeit_soll",
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Beruhigungszeit", "Beruhigungszeit_soll",
                             "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
                             "DN", "Material kürzel", "Material", "Ergebnis", "Datei"]
             df_filter = self.active_table.query(query).loc[:,display_cols]
+
         elif query_name == "Doppelte Prüfungen / Listeineinträge":
             reach = self.active_table["Bezeichnung"]
             df_filter = self.active_table[reach.isin(reach[reach.duplicated()])].query("Datei != None")
+
         elif query_name == "Fehler in Stammdatenabgleich: DN":
-            display_cols = ["Bezeichnung","DN","DN_Haltung"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("DN != DN_Haltung").loc[:,display_cols]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","DN","DN_Stammdaten"]
+            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("DN != DN_Stammdaten").loc[:,display_cols]
+
         elif query_name == "Fehler in Stammdatenabgleich: Länge":
-            display_cols = ["Bezeichnung","Länge","Länge_Haltung"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("Länge != Länge_Haltung").loc[:,display_cols]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Länge","Länge_Stammdaten"]
+            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("Länge != Länge_Stammdaten").loc[:,display_cols]
+
         elif query_name == "Fehler in Stammdatenabgleich: Länge (1m Toleranz)":
-            display_cols = ["Bezeichnung","Länge","Länge_Haltung"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("(Länge - Länge_Haltung) > 1 ").loc[:,display_cols]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Länge","Länge_Stammdaten"]
+            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("(Länge - Länge_Stammdaten) > 1 ").loc[:,display_cols]
+
         elif query_name == "Fehler in Stammdatenabgleich: Schacht oben":
-            display_cols = ["Bezeichnung","Schacht oben","Schacht oben_Haltung", "Schacht unten"]
-            if "Schacht unten_Haltung" in self.active_table.columns:
-                display_cols.append("Schacht unten_Haltung")
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Schacht oben` != `Schacht oben_Haltung`").loc[:,display_cols]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Schacht oben_Stammdaten"]
+            if "Schacht unten_Stammdaten" in self.active_table.columns:
+                display_cols.append("Schacht unten_Stammdaten")
+            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Schacht oben` != `Schacht oben_Stammdaten`").loc[:,display_cols]
+
         elif query_name == "Fehler in Stammdatenabgleich: Schacht unten":
-            display_cols = ["Bezeichnung","Schacht oben"]
-            if "Schacht oben_Haltung" in self.active_table.columns:
-                display_cols.append("Schacht oben_Haltung")
-            display_cols.extend(["Schacht unten", "Schacht unten_Haltung"])
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Schacht unten` != `Schacht unten_Haltung`").loc[:,display_cols]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten"]
+            if "Schacht oben_Stammdaten" in self.active_table.columns:
+                display_cols.append("Schacht oben_Stammdaten")
+            display_cols.extend(["Schacht unten_Stammdaten"])
+            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Schacht unten` != `Schacht unten_Stammdaten`").loc[:,display_cols]
+
         elif query_name == "Fehler in Stammdatenabgleich: Material":
-            display_cols = ["Bezeichnung","Material kürzel", "Material_Haltung"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Material kürzel` != Material_Haltung").loc[:,display_cols]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Material kürzel", "Material_Stammdaten"]
+            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Material kürzel` != Material_Stammdaten").loc[:,display_cols]
+
         elif query_name == "Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein":
             display_cols = ["Bezeichnung","DN","Material","dp_zulässig","Druckänderung","Ergebnis"]
             if "Kommentar" in self.active_table.columns:
                 display_cols.append("Kommentar")
             df_filter = self.active_table.query("(abs(dp_zulässig)*-1 < Druckänderung and Ergebnis == 'undicht') or (abs(dp_zulässig)*-1 > Druckänderung and Ergebnis == 'dicht')").loc[:,display_cols]
+
         elif query_name == "Druckprüfung fehlt - optische Beurteilung vorhanden":
-            display_cols = ["Bezeichnung","Ergebnis","Ergebnis OI", "DN", "Material"]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Ergebnis","Ergebnis OI", "DN", "Material"]
             if "Kommentar" in self.active_table.columns:
                 display_cols.append("Kommentar")
             df_filter = self.active_table[(self.active_table["Ergebnis OI"].str.lower() == "optisch dicht") & (self.active_table.Ergebnis.isnull())].loc[:,display_cols]
+
         elif query_name == "keine Druckprüfung vorhanden":
-            display_cols = ["Bezeichnung","Ergebnis","DN", "Material"]
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Ergebnis","DN", "Material"]
             if "Kommentar" in self.active_table.columns:
                 display_cols.append("Kommentar")
             if "Ergebnis OI" in self.active_table.columns:
@@ -612,7 +632,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         tab_show = self.dp_table
         
         
-        if self.group_base_data.isChecked():
+        if self.group_base_data.isChecked() and self.combobox_maplayer.currentLayer() != None:
             if self.reach_expression.currentText == "" or not self.reach_expression.isValidExpression():
                 if self.group_lists.isChecked():
                     if os.path.isfile(self.filepath_reach_protocol.filePath()):
@@ -625,11 +645,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                         tab_show = tab_show.merge(dp_excel, on = "Bezeichnung", how = "outer")
                 names = tab_show["Bezeichnung"].tolist()
                 df_base_layer = self.load_base_data_layer(preview = False, names_list = np.unique(names).tolist())
-                if df_base_layer != None:
+                if isinstance(df_base_layer, pd.DataFrame):
                     tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
             else:
                 df_base_layer = self.load_base_data_layer(preview = False, filter = self.reach_expression.currentText())
-                if df_base_layer != None:
+                if isinstance(df_base_layer, pd.DataFrame):
                     tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
 
                 if os.path.isfile(self.filepath_reach_protocol.filePath()):
@@ -653,6 +673,9 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         
         self.update_table(tab_show)
         self.setCursor(Qt.ArrowCursor)
+
+    #def guess_attributes(self):
+        
 
 
 
