@@ -3,18 +3,75 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to dpChecker's documentation!
+Dokumentation zum Dichtheitsprüfung-Checker
 ============================================
 
-Contents:
+Laden von Dichtheitsprüfungen 
+-----------------------------
+
+Bevor alle weiteren Funktionen verwenden werden können, müssen die *.sew*-Dateien der Dichtheitsprüfungen geladen werden.
+Durch klicken auf den |load_btn| Button kann zum gewünschten Ordner navigiert werden. Durch anschließendes klicken auf *Dichtheitsprüfungen laden*
+werdn die einzelnen Dateien ausgelesen und die Tabelle befüllt.
+
+.. |load_btn| image:: /figures/load_button.png
+
+
+Ignorieren von Prüfungen
+-------------------------
+Die Funktion steht nur zur Verfügung, wenn kein Filter für die Datenprüfung gewählt wurde.
+Duch das markieren einer Zeile bzw. Zelle der entspechenden Zeile und anschließendem klicken auf |ignore_btn| wird die gewählte Prüfung in der laufenden 
+Bearbeitung ignoriert. Durch erneues Laden aller *.sew*-Dateien steht sie wieder zur Verfügung. Die Aktion kann nicht rückgängig gemacht werden.
+
+.. |ignore_btn| image:: /figures/ignore_button.png
+
+Erzeugen von Punkten aus GPS-Koordinaten
+-----------------------------------------
+Nach dem die Prüfungen eingelesen wurden können Punkte auf Basis der gespeicherten GPS-Koordinaten erzeugt werden. Das Koordiantensystem kann dabei vom Benutzer definiert werden.
+Wird ein Layer mit Stammdaten geladen, so wird automatisch dessen Koordinatensystem in also Voreinstellung gewählt.
+
+|load_points|
+
+.. |load_points| image:: /figures/load_points.png
+
+Verknüpfen von Stammdaten
+--------------------------
+Optional können weitere Prüfungen durchgeführt werden, indem Stammdaten und Exce-Listen geladen werden.
+
+*Wichtig* ist, dass die Haltungsbezeichnung eindeutig ist.
+
+Zur inhaltlichen Prüfung können die Dichtheitsprüfungen mit den Stammdaten der Haltung verknüpft werden. Dafür muss der entsprechende Layer in QGis geladen sein. 
+Durch die Auswahl des Layers können anschließend die Attributnamen zugewiesen werden. Wichtig ist, dass die Bezeichnung der Haltung gewählt wird.
+Die *Haltungslänge* wird aus der Geometrie des Layers ermittelt, sofern kein Attribut zugewiesen wurde.
+
+
+**Verwenden eines Filter-Ausdrucks**
+
+Wenn *kein* Filter angegeben ist, dann werden nur jende Haltungen geladen, für die eine Dichtheitsprüfung vorhanden ist. Um die Vollständigkeit der Dichtheitsprüfungen
+zu kontrollieren, kann ein Filter gesetzt werden. 
+
+Wenn ein Filterausdruck definiert wurde, dann werden Haltungen und Dichtheitsprüfung mittels eines *full-joins* verknüpft. Wird für eine Haltung keine passende
+Prüfung gefunden, ist sie trotzdem in der Tabelle ersichtlich. Wenn zusätzlich noch Excel-Listen geladen werden, dann werden diese als *left-join* verknüpft:
+Sollte eine Haltung in einer Excel-Liste vorhanden sein, aber weder im gefilterten Haltungslayer, noch in den Dichtheitsprüfungen, so scheint sie auch nicht in der 
+Tabelle auf. 
+
+*Beispiel:* Im Filter werden alle Misch- und Schmutzwasserhaltungen im Gebiet 'West' gewählt. (Gebiet = 'West' and Kanalart in ('KM','KS'))
+In der Excel-Liste, in der die Haltungsinspektion dokumentiert wurde, sind auch Regenwasserhaltungen enthalten. Diese scheinen sind in der angezeigten Liste nicht enthalten.
+
+|haltung_filter|
+
+.. |haltung_filter| image:: /figures/haltung_filter.png
+	:scale: 75 %
+
+Laden von verknüpften Daten
+----------------------------
+Wenn entweder Stammdaten oder eine Excel-Liste definiert wurden, können Daten mit dem Button |stammdaten_btn| geladen werden. Durch das laden werden weitere Prüfungen
+im Dropdown *Datenprüfung* ermöglicht. 
+
+|check_data|
+
+.. |stammdaten_btn| image:: /figures/stammdaten_button.png
+.. |check_data| image:: /figures/check_data.png
+	:scale: 75 %
 
 .. toctree::
    :maxdepth: 2
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

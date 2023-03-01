@@ -1,30 +1,31 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Welcome to dpChecker’s documentation! &#8212; dpChecker 0.1 documentation</title>
+    <title>Dokumentation zum Dichtheitsprüfung-Checker &#8212; dpChecker 0.1 Dokumentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/translations.js"></script>
     
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Stichwortverzeichnis" href="genindex.html" />
+    <link rel="search" title="Suche" href="search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">dpChecker 0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Welcome to dpChecker’s documentation!</a></li> 
+          <a href="genindex.html" title="Stichwortverzeichnis"
+             accesskey="I">Index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">dpChecker 0.1 Dokumentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Dokumentation zum Dichtheitsprüfung-Checker</a></li> 
       </ul>
     </div>  
 
@@ -33,19 +34,52 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="welcome-to-dpchecker-s-documentation">
-<h1>Welcome to dpChecker’s documentation!<a class="headerlink" href="#welcome-to-dpchecker-s-documentation" title="Permalink to this heading">¶</a></h1>
-<p>Contents:</p>
+  <section id="dokumentation-zum-dichtheitsprufung-checker">
+<h1>Dokumentation zum Dichtheitsprüfung-Checker<a class="headerlink" href="#dokumentation-zum-dichtheitsprufung-checker" title="Permalink to this heading">¶</a></h1>
+<section id="laden-von-dichtheitsprufungen">
+<h2>Laden von Dichtheitsprüfungen<a class="headerlink" href="#laden-von-dichtheitsprufungen" title="Permalink to this heading">¶</a></h2>
+<p>Bevor alle weiteren Funktionen verwenden werden können, müssen die <em>.sew</em>-Dateien der Dichtheitsprüfungen geladen werden.
+Durch klicken auf den <img alt="load_btn" src="_images/load_button.png" /> Button kann zum gewünschten Ordner navigiert werden. Durch anschließendes klicken auf <em>Dichtheitsprüfungen laden</em>
+werdn die einzelnen Dateien ausgelesen und die Tabelle befüllt.</p>
+</section>
+<section id="ignorieren-von-prufungen">
+<h2>Ignorieren von Prüfungen<a class="headerlink" href="#ignorieren-von-prufungen" title="Permalink to this heading">¶</a></h2>
+<p>Die Funktion steht nur zur Verfügung, wenn kein Filter für die Datenprüfung gewählt wurde.
+Duch das markieren einer Zeile bzw. Zelle der entspechenden Zeile und anschließendem klicken auf <img alt="ignore_btn" src="_images/ignore_button.png" /> wird die gewählte Prüfung in der laufenden
+Bearbeitung ignoriert. Durch erneues Laden aller <em>.sew</em>-Dateien steht sie wieder zur Verfügung. Die Aktion kann nicht rückgängig gemacht werden.</p>
+</section>
+<section id="erzeugen-von-punkten-aus-gps-koordinaten">
+<h2>Erzeugen von Punkten aus GPS-Koordinaten<a class="headerlink" href="#erzeugen-von-punkten-aus-gps-koordinaten" title="Permalink to this heading">¶</a></h2>
+<p>Nach dem die Prüfungen eingelesen wurden können Punkte auf Basis der gespeicherten GPS-Koordinaten erzeugt werden. Das Koordiantensystem kann dabei vom Benutzer definiert werden.
+Wird ein Layer mit Stammdaten geladen, so wird automatisch dessen Koordinatensystem in also Voreinstellung gewählt.</p>
+<p><img alt="load_points" src="_images/load_points.png" /></p>
+</section>
+<section id="verknupfen-von-stammdaten">
+<h2>Verknüpfen von Stammdaten<a class="headerlink" href="#verknupfen-von-stammdaten" title="Permalink to this heading">¶</a></h2>
+<p>Optional können weitere Prüfungen durchgeführt werden, indem Stammdaten und Exce-Listen geladen werden.</p>
+<p><em>Wichtig</em> ist, dass die Haltungsbezeichnung eindeutig ist.</p>
+<p>Zur inhaltlichen Prüfung können die Dichtheitsprüfungen mit den Stammdaten der Haltung verknüpft werden. Dafür muss der entsprechende Layer in QGis geladen sein.
+Durch die Auswahl des Layers können anschließend die Attributnamen zugewiesen werden. Wichtig ist, dass die Bezeichnung der Haltung gewählt wird.
+Die <em>Haltungslänge</em> wird aus der Geometrie des Layers ermittelt, sofern kein Attribut zugewiesen wurde.</p>
+<p><strong>Verwenden eines Filter-Ausdrucks</strong></p>
+<p>Wenn <em>kein</em> Filter angegeben ist, dann werden nur jende Haltungen geladen, für die eine Dichtheitsprüfung vorhanden ist. Um die Vollständigkeit der Dichtheitsprüfungen
+zu kontrollieren, kann ein Filter gesetzt werden.</p>
+<p>Wenn ein Filterausdruck definiert wurde, dann werden Haltungen und Dichtheitsprüfung mittels eines <em>full-joins</em> verknüpft. Wird für eine Haltung keine passende
+Prüfung gefunden, ist sie trotzdem in der Tabelle ersichtlich. Wenn zusätzlich noch Excel-Listen geladen werden, dann werden diese als <em>left-join</em> verknüpft:
+Sollte eine Haltung in einer Excel-Liste vorhanden sein, aber weder im gefilterten Haltungslayer, noch in den Dichtheitsprüfungen, so scheint sie auch nicht in der
+Tabelle auf.</p>
+<p><em>Beispiel:</em> Im Filter werden alle Misch- und Schmutzwasserhaltungen im Gebiet ‚West‘ gewählt. (Gebiet = ‚West‘ and Kanalart in (‚KM‘,‘KS‘))
+In der Excel-Liste, in der die Haltungsinspektion dokumentiert wurde, sind auch Regenwasserhaltungen enthalten. Diese scheinen sind in der angezeigten Liste nicht enthalten.</p>
+<p><a class="reference internal" href="_images/haltung_filter.png"><img alt="haltung_filter" src="_images/haltung_filter.png" style="width: 386.25px; height: 179.25px;" /></a></p>
+</section>
+<section id="laden-von-verknupften-daten">
+<h2>Laden von verknüpften Daten<a class="headerlink" href="#laden-von-verknupften-daten" title="Permalink to this heading">¶</a></h2>
+<p>Wenn entweder Stammdaten oder eine Excel-Liste definiert wurden, können Daten mit dem Button <img alt="stammdaten_btn" src="_images/stammdaten_button.png" /> geladen werden. Durch das laden werden weitere Prüfungen
+im Dropdown <em>Datenprüfung</em> ermöglicht.</p>
+<p><a class="reference internal" href="_images/check_data.png"><img alt="check_data" src="_images/check_data.png" style="width: 431.25px; height: 224.25px;" /></a></p>
 <div class="toctree-wrapper compound">
 </div>
 </section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
 </section>
 
 
@@ -56,26 +90,25 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <div>
-    <h3><a href="#">Table of Contents</a></h3>
+    <h3><a href="#">Inhaltsverzeichnis</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Welcome to dpChecker’s documentation!</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#">Dokumentation zum Dichtheitsprüfung-Checker</a><ul>
+<li><a class="reference internal" href="#laden-von-dichtheitsprufungen">Laden von Dichtheitsprüfungen</a></li>
+<li><a class="reference internal" href="#ignorieren-von-prufungen">Ignorieren von Prüfungen</a></li>
+<li><a class="reference internal" href="#erzeugen-von-punkten-aus-gps-koordinaten">Erzeugen von Punkten aus GPS-Koordinaten</a></li>
+<li><a class="reference internal" href="#verknupfen-von-stammdaten">Verknüpfen von Stammdaten</a></li>
+<li><a class="reference internal" href="#laden-von-verknupften-daten">Laden von verknüpften Daten</a></li>
+</ul>
+</li>
 </ul>
 
   </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
+  <h3 id="searchlabel">Schnellsuche</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
+      <input type="submit" value="Los" />
     </form>
     </div>
 </div>
@@ -88,10 +121,10 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">dpChecker 0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Welcome to dpChecker’s documentation!</a></li> 
+          <a href="genindex.html" title="Stichwortverzeichnis"
+             >Index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">dpChecker 0.1 Dokumentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Dokumentation zum Dichtheitsprüfung-Checker</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

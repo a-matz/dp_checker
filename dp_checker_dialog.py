@@ -649,7 +649,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                     tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
             else:
                 df_base_layer = self.load_base_data_layer(preview = False, filter = self.reach_expression.currentText())
-                if isinstance(df_base_layer, pd.DataFrame):
+                if isinstance(df_base_layer, pd.DataFrame) and len(df_base_layer) > 0:
                     tab_show = tab_show.merge(df_base_layer, on = "Bezeichnung", how = "outer")
 
                 if os.path.isfile(self.filepath_reach_protocol.filePath()):
