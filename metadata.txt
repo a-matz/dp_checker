@@ -5,12 +5,12 @@
 [general]
 name=Dichtheitsprüfung Checker
 qgisMinimumVersion=3.20
-description=Mit diesem Plugin können Dichtheitsprüfungen des Systems Egger in Kombination mit den Attributen der zugehörigen Haltung auf inhaltlich geprüft werden.
+description=Mit diesem Plugin können die .sew-Dateien von Dichtheitsprüfungen ausgelesen und inhaltlich geprüft werden.
 version=0.1
 author=Armin Matzl
 email=arminmatzl@gmail.com
 
-about=Mit diesem Plugin können Dichtheitsprüfungen von Freispiegelleitungen mit Luft des Systems Egger in Kombination mit den Attributen der zugehörigen Haltung auf inhaltlich geprüft werden. Dazu werden die *.sew-Dateien eingelesen und mit den Attributen der Haltung abgeglichen. Dabei werden einerseits die Stammdaten abgeglichen und andererseits die Einhaltung der ÖNorm B2503 geprüft.
+about=Mit diesem Plugin können Dichtheitsprüfungen von Freispiegelleitungen mit Luft in Kombination mit den Attributen der zugehörigen Haltung inhaltlich geprüft werden. Dazu werden die *.sew-Dateien eingelesen und mit den Attributen der Haltung abgeglichen. Dabei werden einerseits die Stammdaten abgeglichen und andererseits die Einhaltung der Prüfzeiten kontrolliert.
 
 tracker=http://bugs
 repository=http://repo

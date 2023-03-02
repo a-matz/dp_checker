@@ -10,7 +10,7 @@ Laden von Dichtheitsprüfungen
 -----------------------------
 
 Bevor alle weiteren Funktionen verwenden werden können, müssen die *.sew*-Dateien der Dichtheitsprüfungen geladen werden.
-Durch klicken auf den |load_btn| Button kann zum gewünschten Ordner navigiert werden. Durch anschließendes klicken auf *Dichtheitsprüfungen laden*
+Durch Klicken auf den |load_btn| Button kann zum gewünschten Ordner navigiert werden. Durch anschließendes Klicken auf *Dichtheitsprüfungen laden*
 werdn die einzelnen Dateien ausgelesen und die Tabelle befüllt.
 
 .. |load_btn| image:: /figures/load_button.png
@@ -19,14 +19,14 @@ werdn die einzelnen Dateien ausgelesen und die Tabelle befüllt.
 Ignorieren von Prüfungen
 -------------------------
 Die Funktion steht nur zur Verfügung, wenn kein Filter für die Datenprüfung gewählt wurde.
-Duch das markieren einer Zeile bzw. Zelle der entspechenden Zeile und anschließendem klicken auf |ignore_btn| wird die gewählte Prüfung in der laufenden 
-Bearbeitung ignoriert. Durch erneues Laden aller *.sew*-Dateien steht sie wieder zur Verfügung. Die Aktion kann nicht rückgängig gemacht werden.
+Duch das Markieren einer Zeile bzw. Zelle der entsprechenden Zeile und anschließendem klicken auf |ignore_btn| wird die gewählte Prüfung in der laufenden 
+Bearbeitung ignoriert. Durch erneutes Laden aller *.sew*-Dateien steht sie wieder zur Verfügung. Die Aktion kann nicht rückgängig gemacht werden.
 
 .. |ignore_btn| image:: /figures/ignore_button.png
 
 Erzeugen von Punkten aus GPS-Koordinaten
 -----------------------------------------
-Nach dem die Prüfungen eingelesen wurden können Punkte auf Basis der gespeicherten GPS-Koordinaten erzeugt werden. Das Koordiantensystem kann dabei vom Benutzer definiert werden.
+Nach dem die Prüfungen eingelesen wurden können Punkte auf Basis der gespeicherten GPS-Koordinaten erzeugt werden. Das Koordinatensystem kann dabei vom Benutzer definiert werden.
 Wird ein Layer mit Stammdaten geladen, so wird automatisch dessen Koordinatensystem in also Voreinstellung gewählt.
 
 |load_points|
@@ -35,7 +35,7 @@ Wird ein Layer mit Stammdaten geladen, so wird automatisch dessen Koordinatensys
 
 Verknüpfen von Stammdaten
 --------------------------
-Optional können weitere Prüfungen durchgeführt werden, indem Stammdaten und Exce-Listen geladen werden.
+Optional können weitere Prüfungen durchgeführt werden, indem Stammdaten und Excel-Listen geladen werden.
 
 *Wichtig* ist, dass die Haltungsbezeichnung eindeutig ist.
 
@@ -46,8 +46,9 @@ Die *Haltungslänge* wird aus der Geometrie des Layers ermittelt, sofern kein At
 
 **Verwenden eines Filter-Ausdrucks**
 
-Wenn *kein* Filter angegeben ist, dann werden nur jende Haltungen geladen, für die eine Dichtheitsprüfung vorhanden ist. Um die Vollständigkeit der Dichtheitsprüfungen
-zu kontrollieren, kann ein Filter gesetzt werden. 
+Wenn *kein* Filter angegeben ist, dann werden nur jene Haltungen geladen, für die eine Dichtheitsprüfung vorhanden ist. Um die Vollständigkeit der Dichtheitsprüfungen
+zu kontrollieren, kann ein Filter gesetzt werden. Die optional geladenen Exce-Listen werden als *full-join* mit den Dichtheitsprüfungen verknüpft.
+Alle Einträge der Listen sind somit in der geladenen Tabelle enthalten.
 
 Wenn ein Filterausdruck definiert wurde, dann werden Haltungen und Dichtheitsprüfung mittels eines *full-joins* verknüpft. Wird für eine Haltung keine passende
 Prüfung gefunden, ist sie trotzdem in der Tabelle ersichtlich. Wenn zusätzlich noch Excel-Listen geladen werden, dann werden diese als *left-join* verknüpft:

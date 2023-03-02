@@ -39,31 +39,32 @@
 <section id="laden-von-dichtheitsprufungen">
 <h2>Laden von Dichtheitsprüfungen<a class="headerlink" href="#laden-von-dichtheitsprufungen" title="Permalink to this heading">¶</a></h2>
 <p>Bevor alle weiteren Funktionen verwenden werden können, müssen die <em>.sew</em>-Dateien der Dichtheitsprüfungen geladen werden.
-Durch klicken auf den <img alt="load_btn" src="_images/load_button.png" /> Button kann zum gewünschten Ordner navigiert werden. Durch anschließendes klicken auf <em>Dichtheitsprüfungen laden</em>
+Durch Klicken auf den <img alt="load_btn" src="_images/load_button.png" /> Button kann zum gewünschten Ordner navigiert werden. Durch anschließendes Klicken auf <em>Dichtheitsprüfungen laden</em>
 werdn die einzelnen Dateien ausgelesen und die Tabelle befüllt.</p>
 </section>
 <section id="ignorieren-von-prufungen">
 <h2>Ignorieren von Prüfungen<a class="headerlink" href="#ignorieren-von-prufungen" title="Permalink to this heading">¶</a></h2>
 <p>Die Funktion steht nur zur Verfügung, wenn kein Filter für die Datenprüfung gewählt wurde.
-Duch das markieren einer Zeile bzw. Zelle der entspechenden Zeile und anschließendem klicken auf <img alt="ignore_btn" src="_images/ignore_button.png" /> wird die gewählte Prüfung in der laufenden
-Bearbeitung ignoriert. Durch erneues Laden aller <em>.sew</em>-Dateien steht sie wieder zur Verfügung. Die Aktion kann nicht rückgängig gemacht werden.</p>
+Duch das Markieren einer Zeile bzw. Zelle der entsprechenden Zeile und anschließendem klicken auf <img alt="ignore_btn" src="_images/ignore_button.png" /> wird die gewählte Prüfung in der laufenden
+Bearbeitung ignoriert. Durch erneutes Laden aller <em>.sew</em>-Dateien steht sie wieder zur Verfügung. Die Aktion kann nicht rückgängig gemacht werden.</p>
 </section>
 <section id="erzeugen-von-punkten-aus-gps-koordinaten">
 <h2>Erzeugen von Punkten aus GPS-Koordinaten<a class="headerlink" href="#erzeugen-von-punkten-aus-gps-koordinaten" title="Permalink to this heading">¶</a></h2>
-<p>Nach dem die Prüfungen eingelesen wurden können Punkte auf Basis der gespeicherten GPS-Koordinaten erzeugt werden. Das Koordiantensystem kann dabei vom Benutzer definiert werden.
+<p>Nach dem die Prüfungen eingelesen wurden können Punkte auf Basis der gespeicherten GPS-Koordinaten erzeugt werden. Das Koordinatensystem kann dabei vom Benutzer definiert werden.
 Wird ein Layer mit Stammdaten geladen, so wird automatisch dessen Koordinatensystem in also Voreinstellung gewählt.</p>
 <p><img alt="load_points" src="_images/load_points.png" /></p>
 </section>
 <section id="verknupfen-von-stammdaten">
 <h2>Verknüpfen von Stammdaten<a class="headerlink" href="#verknupfen-von-stammdaten" title="Permalink to this heading">¶</a></h2>
-<p>Optional können weitere Prüfungen durchgeführt werden, indem Stammdaten und Exce-Listen geladen werden.</p>
+<p>Optional können weitere Prüfungen durchgeführt werden, indem Stammdaten und Excel-Listen geladen werden.</p>
 <p><em>Wichtig</em> ist, dass die Haltungsbezeichnung eindeutig ist.</p>
 <p>Zur inhaltlichen Prüfung können die Dichtheitsprüfungen mit den Stammdaten der Haltung verknüpft werden. Dafür muss der entsprechende Layer in QGis geladen sein.
 Durch die Auswahl des Layers können anschließend die Attributnamen zugewiesen werden. Wichtig ist, dass die Bezeichnung der Haltung gewählt wird.
 Die <em>Haltungslänge</em> wird aus der Geometrie des Layers ermittelt, sofern kein Attribut zugewiesen wurde.</p>
 <p><strong>Verwenden eines Filter-Ausdrucks</strong></p>
-<p>Wenn <em>kein</em> Filter angegeben ist, dann werden nur jende Haltungen geladen, für die eine Dichtheitsprüfung vorhanden ist. Um die Vollständigkeit der Dichtheitsprüfungen
-zu kontrollieren, kann ein Filter gesetzt werden.</p>
+<p>Wenn <em>kein</em> Filter angegeben ist, dann werden nur jene Haltungen geladen, für die eine Dichtheitsprüfung vorhanden ist. Um die Vollständigkeit der Dichtheitsprüfungen
+zu kontrollieren, kann ein Filter gesetzt werden. Die optional geladenen Exce-Listen werden als <em>full-join</em> mit den Dichtheitsprüfungen verknüpft.
+Alle Einträge der Listen sind somit in der geladenen Tabelle enthalten.</p>
 <p>Wenn ein Filterausdruck definiert wurde, dann werden Haltungen und Dichtheitsprüfung mittels eines <em>full-joins</em> verknüpft. Wird für eine Haltung keine passende
 Prüfung gefunden, ist sie trotzdem in der Tabelle ersichtlich. Wenn zusätzlich noch Excel-Listen geladen werden, dann werden diese als <em>left-join</em> verknüpft:
 Sollte eine Haltung in einer Excel-Liste vorhanden sein, aber weder im gefilterten Haltungslayer, noch in den Dichtheitsprüfungen, so scheint sie auch nicht in der

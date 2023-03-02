@@ -77,6 +77,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.group_lists.toggled.connect(self.check_button_load_extras)
         self.button_ignore_file.clicked.connect(self.ignore_file)
         self.filter_name.textEdited.connect(self.apply_filter)
+        self.button_box.helpRequested.connect(self.open_help)
 
         self.combobox_maplayer.setFilters(QgsMapLayerProxyModel.LineLayer)
 
@@ -674,7 +675,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.update_table(tab_show)
         self.setCursor(Qt.ArrowCursor)
 
-    #def guess_attributes(self):
+    def open_help(self):
+        help_file = os.path.join(os.path.dirname(__file__),"help","index.html")
+        print(help_file)
+        os.startfile(help_file)
         
 
 
