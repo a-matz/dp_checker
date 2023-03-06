@@ -79,6 +79,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.filter_name.textEdited.connect(self.apply_filter)
         self.button_box.helpRequested.connect(self.open_help)
 
+        self.table.setAlternatingRowColors(True)
+        self.table.setStyleSheet("alternate-background-color: #e9e7e3")
+
+
         self.combobox_maplayer.setFilters(QgsMapLayerProxyModel.LineLayer)
 
         self.filepath_reach_protocol.setFilter("Excel (*.xlsx)")

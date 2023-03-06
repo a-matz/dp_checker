@@ -5,15 +5,17 @@
 [general]
 name=Dichtheitsprüfung Checker
 qgisMinimumVersion=3.20
-description=Mit diesem Plugin können die .sew-Dateien von Dichtheitsprüfungen ausgelesen und inhaltlich geprüft werden.
+description=With this plugin the content of raw data files from sewer leakage tests (.sew-files) can be read and checked.
 version=0.1
 author=Armin Matzl
 email=arminmatzl@gmail.com
 
-about=Mit diesem Plugin können Dichtheitsprüfungen von Freispiegelleitungen mit Luft in Kombination mit den Attributen der zugehörigen Haltung inhaltlich geprüft werden. Dazu werden die *.sew-Dateien eingelesen und mit den Attributen der Haltung abgeglichen. Dabei werden einerseits die Stammdaten abgeglichen und andererseits die Einhaltung der Prüfzeiten kontrolliert.
+about=With this plugin you can import data from sewer leakage tests with air and check their contents by comparing them whith attributes from the belonging reach. Therefore '.sew'-files (common format to store data from leakage tests in Austria) are imported.
+It is possible to export the resulting table direclty or join the data with attributes from the belonging reach. Some methods are implemented to verify the content.
 
-tracker=http://bugs
-repository=http://repo
+
+tracker=https://github.com/a-matz/dp_checker/issues
+repository=https://github.com/a-matz/dp_checker
 # End of mandatory metadata
 
 # Recommended items:
@@ -23,9 +25,9 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=python, LIS, ABA, Druckprüfung, Kanal, Dichtheitsprüfung, Druckprüfung
+tags=Druckprüfung, Kanal, Dichtheitsprüfung, leakage test, sewer,reach, Haltung
 
-homepage=
+homepage=https://github.com/a-matz/dp_checker
 category=Plugins
 icon=icon.png
 # experimental flag
