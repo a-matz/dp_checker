@@ -328,7 +328,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
         #self.bar.pushMessage("Geladen",f"Es wurden {len(files)} Dateien erfolgreich geladen", level = Qgis.Success, duration = 5)
         self.bar.pushSuccess("Geladen",f"Es wurden {len(files)} Dateien erfolgreich geladen")
-        #self.bar.pushSuccess("Geladen",f"<a href= 'C:/temp/test.qgz'> C:/temp  </a>")
+        
     def update_filter(self, preview = False, only_dp = False):
         filter = [""]
         if not preview:
@@ -544,6 +544,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
     def export_to_csv(self,path):
         if path != None and path != "":
             self.active_view.to_csv(path, sep = ";", decimal = ",", index = False, encoding = "cp1252")
+            self.bar.pushSuccess("Export erfolgreich",f"Tabelle gespeichter in <a href= '{os.path.dirname(path)}'> {path}  </a>")
 
     def load_base_data_layer(self, preview, names_list = None, filter = None):
         """
