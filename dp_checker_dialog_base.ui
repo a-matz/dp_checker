@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1120</width>
+    <width>1062</width>
     <height>929</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Dichtheitsprüfung Checker</string>
@@ -454,7 +460,7 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="2">
+     <item row="0" column="3">
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -474,6 +480,13 @@
        </property>
        <property name="text">
         <string>.sew-Datei öffnen</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="button_show_graph">
+       <property name="text">
+        <string>Prüfverlauf anzeigen</string>
        </property>
       </widget>
      </item>

@@ -26,6 +26,7 @@ import glob
 from datetime import datetime, timedelta, time
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import processing
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets, QtGui
@@ -56,9 +57,9 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
         self.bar = QgsMessageBar(self)
-        self.bar.setMinimumWidth(1000)
-        self.bar.setMaximumWidth(10062)
-        self.bar.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.bar.setMaximumWidth(self.width())
+        self.bar.setMinimumWidth(self.width())
+        self.bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         self.button_load_dp.clicked.connect(self.load_dp_files)
         self.button_load_dp.clicked.connect(lambda: self.update_filter(only_dp = True))
@@ -82,6 +83,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.button_open_sew.clicked.connect(self.open_sew_file)
         self.filter_name.textEdited.connect(self.apply_filter)
         self.button_box.helpRequested.connect(self.open_help)
+        self.button_show_graph.clicked.connect(self.print_graph)
 
         self.table.setAlternatingRowColors(True)
         self.table.setStyleSheet("alternate-background-color: #e9e7e3")
@@ -118,6 +120,13 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.filter_list =  []
         #self.addFilter("")
     
+    # resize messagebar
+    def resizeEvent(self,resizeEvent):
+        #self.bar.setMinimumWidth(resizeEvent.size().width())
+        self.bar.setMinimumWidth(self.width())
+        self.bar.setMaximumWidth(self.width())
+        print(self.width())
+
     def update_crs(self):
         if self.combobox_maplayer.currentLayer() != None:
             self.projection.setCrs(self.combobox_maplayer.currentLayer().crs())
@@ -181,11 +190,20 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # list to store dictionaries 
         df_list = []
+        not_air_list = []
         for dp_file in files:
             dp_dict = {}
             xtree = et.parse(dp_file)
             # sensor media
-            protocol = xtree.find("document").find("data").find("sensor").find("media").get("value")
+            #check if sensor media is air
+            try:
+                media = xtree.find("document").find("data").find("sensor").find("mediaType").get("value")
+                if media != "air":
+                    not_air_list.append(dp_file)
+                    continue    
+            except:
+                not_air_list.append(dp_file)
+                continue
             #protocol data
             protocol = xtree.find("document").find("data").find("protocol")
             try:
@@ -235,12 +253,16 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 dp_dict["dp_zulässig"] = 0
             
             try:
-                dp_dict["Prüfdruck"] = int(float(protocol.find("measurementPressure").get("value")))
+                dp_dict["Prüfdruck_soll"] = int(float(protocol.find("measurementPressure").get("value")))
             except:
-                dp_dict["Prüfdruck"] = 0
+                dp_dict["Prüfdruck_soll"] = 0
 
             #measurement data
             measurement= xtree.find("document").find("data").find("measurement")
+            try:
+                dp_dict["Prüfdruck"] = float(measurement.find("start").find("pressure").get("value"))
+            except:
+                dp_dict["Prüfdruck"] = 0
             try:
                 dp_dict["Druckänderung"] = round(float(measurement.find("pressureChange").get("value")),2)
             except:
@@ -316,24 +338,30 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
             df_list.append(dp_dict)
-        # create dataframe from list with dictionaries
-        self.dp_table = pd.DataFrame(df_list)
-        # update tableviewwidget
-        self.update_table(self.dp_table)
-        self.button_create_point_layer.setEnabled(True)
-        self.filter_name.setEnabled(True)
-        self.check_enable_basedata_button()
-        self.setCursor(Qt.ArrowCursor)
-        #self.addFilter(["Falsche Beruhigungszeit", "Falsche Prüfzeit","Doppelte Prüfungen"])
+        
 
-        #self.bar.pushMessage("Geladen",f"Es wurden {len(files)} Dateien erfolgreich geladen", level = Qgis.Success, duration = 5)
-        self.bar.pushSuccess("Geladen",f"Es wurden {len(files)} Dateien erfolgreich geladen")
+        if len(not_air_list) > 0:
+            files_txt = "\n".join(not_air_list)
+            QMessageBox.warning(self,"Falsches Prüfmedium",f"Es wurden {len(not_air_list)} Prüfungen nicht eingelesen. Das Sensormedium ist nicht Luft und kann daher nicht verarbeitet werden. Folgende Dateien sind betroffen:\n{files_txt}")
+
+        read_files = len(files) - len(not_air_list)
+        if read_files > 0:
+            # create dataframe from list with dictionaries
+            self.dp_table = pd.DataFrame(df_list)
+            # update tableviewwidget
+            self.update_table(self.dp_table)
+            self.button_create_point_layer.setEnabled(True)
+            self.filter_name.setEnabled(True)
+            self.check_enable_basedata_button()
+        self.setCursor(Qt.ArrowCursor)
+
+        self.bar.pushSuccess("Geladen",f"Es wurden {read_files} Dateien erfolgreich geladen")
         
     def update_filter(self, preview = False, only_dp = False):
         filter = [""]
         if not preview:
             if self.button_load_dp.isEnabled():
-                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein"])
+                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein","Prüfdruck_soll - Prüfdruck > 1mbar"])
             if not only_dp:
                 if self.group_base_data.isChecked() and self.button_load_base_data.isEnabled():
                     filter.extend(["keine Druckprüfung vorhanden","Fehler in Stammdatenabgleich: Länge","Fehler in Stammdatenabgleich: Länge (1m Toleranz)"])
@@ -412,9 +440,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         if "Pfad" in self.active_view.columns:
             self.button_open_sew.setEnabled(True)
             self.button_ignore_file.setEnabled(True)
+            self.button_show_graph.setEnabled(True)
         else:
             self.button_open_sew.setEnabled(False)
             self.button_ignore_file.setEnabled(False)
+            self.button_show_graph.setEnabled(False)
 
         self.setCursor(Qt.ArrowCursor)
 
@@ -666,6 +696,13 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 display_cols.append("Ergebnis OI")
             display_cols.extend(["Bemerkung", "Besonderheit","Pfad"])
             df_filter = self.active_table[self.active_table.Ergebnis.isnull()].loc[:,display_cols]
+        
+        elif query_name == "Prüfdruck_soll - Prüfdruck > 1mbar":
+            query = "abs(Prüfdruck_soll - Prüfdruck) > 1"
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Prüfdruck_soll", "Prüfdruck", "Ergebnis","Bemerkung", "Besonderheit","Beruhigungszeit", "Beruhigungszeit_soll",
+                            "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
+                            "DN", "Material kürzel", "Material", "Datei","Pfad"]
+            df_filter = self.active_table.query(query).loc[:,display_cols]
         else:
             df_filter = self.active_table
 
@@ -724,11 +761,57 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         help_file = os.path.join(os.path.dirname(__file__),"help","index.html")
         os.startfile(help_file)
         
+    def print_graph(self):
+        row = self.table.currentRow()
+        if row >= 0:
+            col = self.active_view.columns.get_loc("Pfad")
+            try:
+                file_name = self.table.item(row,col).text()
+            except:
+                QMessageBox.warning(self,"Keine Datei gefunden","In der gewählten Zeile ist keine Datei hinterlegt. Vermutlich handelt es sich um einen Eintrag aus den Stammdaten bzw. Excel-Listen zu denen keine Dichtheitsprüfung gefunden wurde.")
+                return
+            xtree = et.parse(file_name)
+            measurement = xtree.find("document").find("data").find("measurement")
+            items = measurement.find("pressure")         
 
+            time = []
+            value = []
+            for item in items:
+                time.append(item.get("index"))
+                value.append(item.get("value"))
 
+            df = pd.DataFrame({"time":time, "value":value})
+            #df.time = pd.to_datetime(df.time,format = "%H:%M:%S")
+            df.time = pd.to_timedelta(df.time)
+            df.value = df.value.astype(float)
 
+            begin_time = datetime.strptime(measurement.find("begin").find("time").get("value"), "%H:%M:%S")
+            calm_time = datetime.strptime(measurement.find("calm").find("time").get("value"), "%H:%M:%S")
+            start_time = datetime.strptime(measurement.find("start").find("time").get("value"), "%H:%M:%S")
+            stop_time = datetime.strptime(measurement.find("stop").find("time").get("value"), "%H:%M:%S")
+            end_time = datetime.strptime(measurement.find("end").find("time").get("value"), "%H:%M:%S")
 
-        #layer.setSubsetString(subset)
+            df.time = df.time + begin_time
+
+            name = xtree.find("document").find("data").find("protocol").find("examReach").get("value")
+            test_pressure = int(float(xtree.find("document").find("data").find("protocol").find("measurementPressure").get("value")))
+
+            #plot = df.plot(x = "time", y = "value")
+            #fig = plot.get_figure()
+            fig, ax = plt.subplots() 
+            ax.axhline(y = test_pressure, linestyle = '--', color = "blue") 
+            ax.axvline(x = calm_time, linestyle = '--', color = "orange") 
+            ax.axvline(x = start_time, linestyle = '--', color = "orange") 
+            ax.axvline(x = stop_time, linestyle = '--', color = "orange") 
+            #ax.plot(df.time, df.value, color = "red")
+            ax.step(df.time, df.value, color = "red", where = "post")
+            ax.set_ylabel("Prüfdruck (mbar)")  
+            ax.set_title(name)
+            fig.canvas.manager.set_window_title(f'Dichtheitsprüfung Haltung {name}')
+
+            fig.show()
+            
+
 
 class saveCSV(QDialog):
     path_selected = pyqtSignal(str)
