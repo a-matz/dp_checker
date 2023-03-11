@@ -450,13 +450,23 @@
      <property name="verticalSpacing">
       <number>7</number>
      </property>
-     <item row="0" column="0">
-      <widget class="QPushButton" name="button_ignore_file">
+     <item row="0" column="1">
+      <widget class="QPushButton" name="button_open_sew">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Dichtheitsprüfung ignorieren</string>
+        <string>.sew-Datei öffnen</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="button_show_graph">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Prüfverlauf anzeigen</string>
        </property>
       </widget>
      </item>
@@ -473,20 +483,13 @@
        </property>
       </spacer>
      </item>
-     <item row="0" column="1">
-      <widget class="QPushButton" name="button_open_sew">
+     <item row="0" column="0">
+      <widget class="QPushButton" name="button_ignore_file">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>.sew-Datei öffnen</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QPushButton" name="button_show_graph">
-       <property name="text">
-        <string>Prüfverlauf anzeigen</string>
+        <string>Dichtheitsprüfung ignorieren</string>
        </property>
       </widget>
      </item>

@@ -27,6 +27,7 @@ from datetime import datetime, timedelta, time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import processing
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets, QtGui
@@ -95,7 +96,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.filepath_dp_protocol.setFilter("Excel (*.xlsx)")
 
         # set default crs
-        self.projection.setCrs(QgsCoordinateReferenceSystem(3857))
+        #self.projection.setCrs(QgsCoordinateReferenceSystem(3857))
+        self.projection.setCrs(QgsCoordinateReferenceSystem.fromEpsgId(3857))
         self.combobox_attribute = {
             "Bezeichnung" : self.combobox_haltungnr,
             "Schacht oben_Stammdaten" : self.combobox_vonSchacht,
@@ -125,7 +127,6 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         #self.bar.setMinimumWidth(resizeEvent.size().width())
         self.bar.setMinimumWidth(self.width())
         self.bar.setMaximumWidth(self.width())
-        print(self.width())
 
     def update_crs(self):
         if self.combobox_maplayer.currentLayer() != None:
@@ -361,7 +362,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         filter = [""]
         if not preview:
             if self.button_load_dp.isEnabled():
-                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein","Prüfdruck_soll - Prüfdruck > 1mbar"])
+                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein","Ergebnis Druckprüfung fehlt","Prüfdruck_soll - Prüfdruck > 1mbar"])
             if not only_dp:
                 if self.group_base_data.isChecked() and self.button_load_base_data.isEnabled():
                     filter.extend(["keine Druckprüfung vorhanden","Fehler in Stammdatenabgleich: Länge","Fehler in Stammdatenabgleich: Länge (1m Toleranz)"])
@@ -410,11 +411,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.table.setSortingEnabled(False)
             self.table.setRowCount(0)
             self.table.setColumnCount(len(data.columns))
-            self.table.setRowCount(len(data))        
+            self.table.setRowCount(len(data.index))        
             for i, (index,row) in enumerate(data.iterrows()):
                 for col,value in enumerate(row):
                     if value != None and not pd.isnull(value):
-                        if isinstance(value,pd.datetime):
+                        if isinstance(value,datetime):
                             value = value.strftime("%Y-%m-%d")   
                         if isinstance(value, time):
                             value = str(value)
@@ -425,6 +426,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                         self.table.setItem(i,col,item)
             
             self.table.setHorizontalHeaderLabels(data.columns.values)
+            # view all columns 
+            for i in range(len(data.columns)):
+                self.table.setColumnHidden(i, False)
+            # hide columns pfad
             if "Pfad" in data.columns:
                 self.table.setColumnHidden(np.where(data.columns == "Pfad")[0][0], True)
             self.table.resizeColumnsToContents()
@@ -482,13 +487,17 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         )
         layer.updateFields()
 
-        for id,row in self.dp_table.iterrows():
+        invalid = 0
+        point_table = self.dp_table[(~self.dp_table["GPS E"].isnull()) & (~self.dp_table["GPS N"].isnull())]
+        for id,row in point_table.iterrows():
+            #only of coordinates are available
             feat = QgsFeature()
             feat.setAttributes([row["Bezeichnung"],row["Schacht oben"], row["Schacht unten"], row["Ergebnis"]])
             feat.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(row["GPS E"], row["GPS N"])))
             with edit(layer):
                 layer.addFeature(feat)
 
+        invalid = len(self.dp_table.index)- len(point_table.index)
         #sourceCrs = QgsCoordinateReferenceSystem(4326)
         #d#estCrs = self.projection.crs()
         #tr = QgsCoordinateTransform(sourceCrs,destCrs, QgsProject.instance())
@@ -502,6 +511,9 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         out = processing.run('native:reprojectlayer', alg_params)
         out["OUTPUT"].setName("Dichtheitsprüfung")
         QgsProject.instance().addMapLayer(out["OUTPUT"])
+        
+        if invalid > 0:
+            self.bar.pushWarning("Fehlende Koordinaten", f"In {invalid} Dateien wurden keine gültigen Standortkoordinaten gefunden.")
 
     def load_reach_protocol(self, preview):
         self.setCursor(Qt.WaitCursor)
@@ -646,33 +658,33 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
         elif query_name == "Fehler in Stammdatenabgleich: DN":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","DN","DN_Stammdaten","Bemerkung", "Besonderheit","Pfad"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("DN != DN_Stammdaten").loc[:,display_cols]
+            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("DN != DN_Stammdaten").loc[:,display_cols]
 
         elif query_name == "Fehler in Stammdatenabgleich: Länge":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Länge","Länge_Stammdaten","Bemerkung", "Besonderheit","Pfad"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("Länge != Länge_Stammdaten").loc[:,display_cols]
+            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("Länge != Länge_Stammdaten").loc[:,display_cols]
 
         elif query_name == "Fehler in Stammdatenabgleich: Länge (1m Toleranz)":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Länge","Länge_Stammdaten","Bemerkung", "Besonderheit","Pfad"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("(Länge - Länge_Stammdaten) > 1 ").loc[:,display_cols]
+            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("(Länge - Länge_Stammdaten) > 1 ").loc[:,display_cols]
 
         elif query_name == "Fehler in Stammdatenabgleich: Schacht oben":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Schacht oben_Stammdaten"]
             if "Schacht unten_Stammdaten" in self.active_table.columns:
                 display_cols.append("Schacht unten_Stammdaten")
             display_cols.extend(["Bemerkung", "Besonderheit","Pfad"])
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Schacht oben` != `Schacht oben_Stammdaten`").loc[:,display_cols]
+            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("`Schacht oben` != `Schacht oben_Stammdaten`").loc[:,display_cols]
 
         elif query_name == "Fehler in Stammdatenabgleich: Schacht unten":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten"]
             if "Schacht oben_Stammdaten" in self.active_table.columns:
                 display_cols.append("Schacht oben_Stammdaten")
             display_cols.extend(["Schacht unten_Stammdaten","Bemerkung", "Besonderheit","Pfad"])
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Schacht unten` != `Schacht unten_Stammdaten`").loc[:,display_cols]
+            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("`Schacht unten` != `Schacht unten_Stammdaten`").loc[:,display_cols]
 
         elif query_name == "Fehler in Stammdatenabgleich: Material":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Material kürzel", "Material_Stammdaten","Bemerkung", "Besonderheit","Pfad"]
-            df_filter = self.active_table[~self.active_table.Datei.isnull()].query("`Material kürzel` != Material_Stammdaten").loc[:,display_cols]
+            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("`Material kürzel` != Material_Stammdaten").loc[:,display_cols]
 
         elif query_name == "Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein":
             display_cols = ["Bezeichnung","DN","Material","dp_zulässig","Druckänderung","Ergebnis"]
@@ -680,6 +692,13 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 display_cols.append("Kommentar")
             display_cols.extend(["Bemerkung", "Besonderheit","Pfad"])
             df_filter = self.active_table.query("(abs(dp_zulässig)*-1 < Druckänderung and Ergebnis == 'undicht') or (abs(dp_zulässig)*-1 > Druckänderung and Ergebnis == 'dicht')").loc[:,display_cols]
+        
+        elif query_name == "Ergebnis Druckprüfung fehlt":
+            display_cols = ["Bezeichnung","DN","Material","dp_zulässig","Druckänderung","Ergebnis"]
+            if "Kommentar" in self.active_table.columns:
+                display_cols.append("Kommentar")
+            display_cols.extend(["Bemerkung", "Besonderheit","Pfad"])
+            df_filter = self.active_table[(self.active_table["Ergebnis"].isnull()) | (self.active_table["Ergebnis"] == None)].loc[:,display_cols]
 
         elif query_name == "Druckprüfung fehlt - optische Beurteilung vorhanden":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Ergebnis","Ergebnis OI", "DN", "Material"]
@@ -771,8 +790,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 QMessageBox.warning(self,"Keine Datei gefunden","In der gewählten Zeile ist keine Datei hinterlegt. Vermutlich handelt es sich um einen Eintrag aus den Stammdaten bzw. Excel-Listen zu denen keine Dichtheitsprüfung gefunden wurde.")
                 return
             xtree = et.parse(file_name)
-            measurement = xtree.find("document").find("data").find("measurement")
-            items = measurement.find("pressure")         
+            try:
+                measurement = xtree.find("document").find("data").find("measurement")
+                items = measurement.find("pressure")         
+            except:
+                QMessageBox.warning(self,"Prüfverlauf kann nicht gezeichnet werden","Es wurde keine Prüfverlauf gerfunden.")
+                return
 
             time = []
             value = []
@@ -782,35 +805,94 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
             df = pd.DataFrame({"time":time, "value":value})
             #df.time = pd.to_datetime(df.time,format = "%H:%M:%S")
-            df.time = pd.to_timedelta(df.time)
             df.value = df.value.astype(float)
 
-            begin_time = datetime.strptime(measurement.find("begin").find("time").get("value"), "%H:%M:%S")
-            calm_time = datetime.strptime(measurement.find("calm").find("time").get("value"), "%H:%M:%S")
-            start_time = datetime.strptime(measurement.find("start").find("time").get("value"), "%H:%M:%S")
-            stop_time = datetime.strptime(measurement.find("stop").find("time").get("value"), "%H:%M:%S")
-            end_time = datetime.strptime(measurement.find("end").find("time").get("value"), "%H:%M:%S")
+            try:
+                begin_time = datetime.strptime(measurement.find("begin").find("time").get("value"), "%H:%M:%S")
+                end_time = datetime.strptime(measurement.find("end").find("time").get("value"), "%H:%M:%S")
+                df.time = pd.to_timedelta(df.time)
+                df.time = df.time + begin_time
+                begin = True
+            except:
+                df.time = pd.to_datetime(df.time,format = "%H:%M:%S")
+                begin = False
+            try:
+                calm_time = datetime.strptime(measurement.find("calm").find("time").get("value"), "%H:%M:%S")
+                calm = True
+            except:
+                calm = False
+            try:
+                start_time = datetime.strptime(measurement.find("start").find("time").get("value"), "%H:%M:%S")
+                start = True
+            except:
+                start = False
+            try:
+                stop_time = datetime.strptime(measurement.find("stop").find("time").get("value"), "%H:%M:%S")
+                stop = True
+            except:
+                stop = False
+            
+            if start and calm:
+                calm_time_dt = start_time - calm_time
+                calm_minute, calm_second = divmod(calm_time_dt.seconds,60)
+            if start and stop:
+                start_time_dt = stop_time - start_time
+                start_minute,start_second = divmod(start_time_dt.seconds,60)
 
-            df.time = df.time + begin_time
-
-            name = xtree.find("document").find("data").find("protocol").find("examReach").get("value")
-            test_pressure = int(float(xtree.find("document").find("data").find("protocol").find("measurementPressure").get("value")))
-
-            #plot = df.plot(x = "time", y = "value")
-            #fig = plot.get_figure()
-            fig, ax = plt.subplots() 
-            ax.axhline(y = test_pressure, linestyle = '--', color = "blue") 
-            ax.axvline(x = calm_time, linestyle = '--', color = "orange") 
-            ax.axvline(x = start_time, linestyle = '--', color = "orange") 
-            ax.axvline(x = stop_time, linestyle = '--', color = "orange") 
-            #ax.plot(df.time, df.value, color = "red")
+            
+            reach_data = self.active_table[self.active_table["Pfad"] == file_name].iloc[0]
+            name = reach_data["Bezeichnung"]
+            test_pressure = reach_data["Prüfdruck_soll"]
+            dn = reach_data["DN"]
+            material = reach_data["Material"]
+            result = reach_data["Ergebnis"]
+            if calm:
+                calm_pressure = df[df.time <= calm_time]
+                calm_pressure = calm_pressure.iloc[len(calm_pressure.index)-1].value
+            if start:
+                start_pressure = df[df.time <= start_time]
+                start_pressure = start_pressure.iloc[len(start_pressure.index)-1].value
+            if stop:
+                stop_pressure = df[df.time <= stop_time]
+                stop_pressure = stop_pressure.iloc[len(stop_pressure.index)-1].value
+            
+            delta_p = "{:.2f}".format(stop_pressure - start_pressure)
+            # plot
+            fig, ax = plt.subplots(figsize = (29.7/2.54,21/2.54))
+            ax.axhline(y = test_pressure, linestyle = 'dashdot', color = "grey", linewidth = 1) 
+            ax.axhline(y = 0, linestyle = '-', color = "black", linewidth = 0.5) 
+            #calm
+            if calm:
+                ax.vlines(x = calm_time, ymin = 0, ymax = calm_pressure, linestyle = '--', color = "grey", linewidth = 1) 
+                ax.annotate(text = datetime.strftime(calm_time,format = "%H:%M:%S") + f"\n{calm_pressure} mbar", xy = (calm_time, 1))
+            if calm and start:
+                ax.annotate(text="{:02d}:{:02d}".format(calm_minute,calm_second), xy=(calm_time+calm_time_dt/2,test_pressure/4+1), ha='center')
+                ax.annotate(text='', xy=(calm_time,test_pressure/4), xytext=(start_time, test_pressure/4), arrowprops=dict(arrowstyle='<->', lw = 0.5))
+            #start
+            ax.vlines(x = start_time, ymin = 0, ymax = start_pressure, linestyle = '--', color = "grey", linewidth = 1) 
+            ax.annotate(text = datetime.strftime(start_time,format = "%H:%M:%S") + f"\n{start_pressure} mbar", xy = (start_time, 1))
+            if start and stop:
+                ax.annotate(text="{:02d}:{:02d}".format(start_minute,start_second), xy=(start_time+start_time_dt/2,test_pressure/4+1), ha='center')
+                ax.annotate(text='', xy=(start_time,test_pressure/4), xytext=(stop_time, test_pressure/4), arrowprops=dict(arrowstyle='<->', lw = 0.5))
+            #stop
+            if stop:
+                ax.vlines(x = stop_time, ymin = 0, ymax = stop_pressure, linestyle = '--', color = "grey", linewidth = 1) 
+                ax.annotate(text = datetime.strftime(stop_time,format = "%H:%M:%S") + f"\n{stop_pressure} mbar", xy = (stop_time, 1))
+            #max pressure
+            df_max = df[df.value == df.value.max()].iloc[0]
+            if calm and start:
+                ax.annotate(text = f"{df_max.value} mbar", xy = (df_max.time, df_max.value), xytext = (df_max.time + calm_time_dt/6,df_max.value*0.97), arrowprops=dict(arrowstyle='-', lw = 0.5),va="bottom", ha = "left")
+            else:
+                ax.annotate(text = f"{df_max.value} mbar", xy = (df_max.time, df_max.value), xytext = (df_max.time + timedelta(seconds = 25),df_max.value*0.97), arrowprops=dict(arrowstyle='-', lw = 0.5),va="bottom", ha = "left")
+            #pressure line
             ax.step(df.time, df.value, color = "red", where = "post")
-            ax.set_ylabel("Prüfdruck (mbar)")  
-            ax.set_title(name)
+            ax.set_ylabel("Druck (mbar)") 
+            myFmt = mdates.DateFormatter('%d')
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))      
+            ax.set_title(f"{name}\n{dn} {material}    "+ r"$\Delta p$"+ f" {delta_p} mbar    Ergebnis: {result}", loc = "left")
             fig.canvas.manager.set_window_title(f'Dichtheitsprüfung Haltung {name}')
 
-            fig.show()
-            
+            fig.show()          
 
 
 class saveCSV(QDialog):
