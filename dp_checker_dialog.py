@@ -37,7 +37,7 @@ from qgis.core import (QgsMapLayerProxyModel, QgsGeometry,
                       QgsProcessing, Qgis)
 from qgis.gui import QgsFileWidget, QgsMessageBar
 from qgis.PyQt.QtCore import Qt, QSignalBlocker, QVariant, pyqtSignal
-from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel, QDialogButtonBox, QMessageBox, QSizePolicy
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel, QDialogButtonBox, QMessageBox, QSizePolicy, QLineEdit
 import xml.etree.ElementTree as et
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -62,8 +62,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.bar.setMinimumWidth(self.width())
         self.bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
-        self.button_load_dp.clicked.connect(self.load_dp_files)
         self.button_load_dp.clicked.connect(lambda: self.update_filter(only_dp = True))
+        self.button_load_dp.clicked.connect(self.load_dp_files)
         self.fileWidget.fileChanged.connect(self.check_dp_path)
         self.button_create_point_layer.clicked.connect(self.create_points)
         self.button_preview_protocol_reach.clicked.connect(lambda checked, preview = True: self.load_reach_protocol(preview))
@@ -85,6 +85,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.filter_name.textEdited.connect(self.apply_filter)
         self.button_box.helpRequested.connect(self.open_help)
         self.button_show_graph.clicked.connect(self.print_graph)
+        self.button_save_all_figs.clicked.connect(self.print_all_graphs)
 
         self.table.setAlternatingRowColors(True)
         self.table.setStyleSheet("alternate-background-color: #e9e7e3")
@@ -187,7 +188,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         """
         self.setCursor(Qt.WaitCursor)
         self.ignored_file_list = []
-        files = glob.glob(f"{self.fileWidget.filePath()}/*.sew")
+        if self.checkbox_incl_subdir.isChecked():
+            files = glob.glob(f"{self.fileWidget.filePath()}/**/*.sew", recursive = True)
+        else:
+            files = glob.glob(f"{self.fileWidget.filePath()}/*.sew")
         
         # list to store dictionaries 
         df_list = []
@@ -276,6 +280,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 dp_dict["Beruhigungszeit"] = datetime.strptime(measurement.find("calmDuration").get("value"), "%H:%M:%S").time()
             except:
                 dp_dict["Beruhigungszeit"] = None
+            try:
+                dp_dict["Datum"] = datetime.strptime(measurement.find("begin").find("date").get("value"), "%Y.%m.%d").time()
+            except:
+                dp_dict["Datum"] = None
             
             
             if dp_dict["DN"] != None and dp_dict["Material kürzel"] != None:
@@ -354,6 +362,24 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.button_create_point_layer.setEnabled(True)
             self.filter_name.setEnabled(True)
             self.check_enable_basedata_button()
+        else:
+            try:
+                del self.dp_table, self.active_table, self.active_view
+            except:
+                pass
+            self.table.clear()
+            self.table.clear()
+            self.table.setSortingEnabled(False)
+            self.table.setRowCount(0)
+            self.table.setColumnCount(0)
+            self.button_open_sew.setEnabled(False)
+            self.button_ignore_file.setEnabled(False)
+            self.button_show_graph.setEnabled(False)
+            self.button_save_all_figs.setEnabled(False)
+
+            with QSignalBlocker(self.combobox_filter):
+                self.combobox_filter.clear()
+
         self.setCursor(Qt.ArrowCursor)
 
         self.bar.pushSuccess("Geladen",f"Es wurden {read_files} Dateien erfolgreich geladen")
@@ -362,7 +388,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         filter = [""]
         if not preview:
             if self.button_load_dp.isEnabled():
-                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein","Ergebnis Druckprüfung fehlt","Prüfdruck_soll - Prüfdruck > 1mbar"])
+                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Falsche Prüfzeit- Ergebnis: dicht","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein","Ergebnis Druckprüfung fehlt in .sew-Datei","Prüfdruck_soll - Prüfdruck > 1mbar"])
             if not only_dp:
                 if self.group_base_data.isChecked() and self.button_load_base_data.isEnabled():
                     filter.extend(["keine Druckprüfung vorhanden","Fehler in Stammdatenabgleich: Länge","Fehler in Stammdatenabgleich: Länge (1m Toleranz)"])
@@ -446,10 +472,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.button_open_sew.setEnabled(True)
             self.button_ignore_file.setEnabled(True)
             self.button_show_graph.setEnabled(True)
+            self.button_save_all_figs.setEnabled(True)
         else:
             self.button_open_sew.setEnabled(False)
             self.button_ignore_file.setEnabled(False)
             self.button_show_graph.setEnabled(False)
+            self.button_save_all_figs.setEnabled(False)
 
         self.setCursor(Qt.ArrowCursor)
 
@@ -464,6 +492,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.apply_filter()
             except:
                 QMessageBox.warning(self,"Keine Datei gefunden","In der gewählten Zeile ist keine Datei hinterlegt. Vermutlich handelt es sich um einen Eintrag aus den Stammdaten bzw. Excel-Listen zu denen keine Dichtheitsprüfung gefunden wurde.")
+        else:
+            self.bar.pushInfo("Keine Zeile Ausgewählt", "Wähle eine Zeile in der Tabelle, um die Aktion auszuführen.")
 
     def open_sew_file(self):
         row = self.table.currentRow()
@@ -474,6 +504,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 os.startfile(file_name)
             except:
                 QMessageBox.warning(self,"Keine Datei gefunden","In der gewählten Zeile ist keine Datei hinterlegt. Vermutlich handelt es sich um einen Eintrag aus den Stammdaten bzw. Excel-Listen zu denen keine Dichtheitsprüfung gefunden wurde.")
+        else:
+            self.bar.pushInfo("Keine Zeile Ausgewählt", "Wähle eine Zeile in der Tabelle, um die Aktion auszuführen.")
 
 
     def create_points(self):
@@ -652,6 +684,13 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                             "DN", "Material kürzel", "Material", "Ergebnis","Bemerkung", "Besonderheit", "Datei","Pfad"]
             df_filter = self.active_table.query(query).loc[:,display_cols]
 
+        elif query_name == "Falsche Prüfzeit- Ergebnis: dicht":
+            query = "Prüfzeit < Prüfzeit_soll"
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Beruhigungszeit", "Beruhigungszeit_soll",
+                            "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
+                            "DN", "Material kürzel", "Material", "Ergebnis","Bemerkung", "Besonderheit", "Datei","Pfad"]
+            df_filter = self.active_table.query(query).loc[:,display_cols][self.active_table["Ergebnis"].str.lower() == "dicht"]
+
         elif query_name == "Doppelte Prüfungen / Listeineinträge":
             reach = self.active_table["Bezeichnung"]
             df_filter = self.active_table[reach.isin(reach[reach.duplicated()])].query("Datei != None")
@@ -693,12 +732,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             display_cols.extend(["Bemerkung", "Besonderheit","Pfad"])
             df_filter = self.active_table.query("(abs(dp_zulässig)*-1 < Druckänderung and Ergebnis == 'undicht') or (abs(dp_zulässig)*-1 > Druckänderung and Ergebnis == 'dicht')").loc[:,display_cols]
         
-        elif query_name == "Ergebnis Druckprüfung fehlt":
+        elif query_name == "Ergebnis Druckprüfung fehlt in .sew-Datei":
             display_cols = ["Bezeichnung","DN","Material","dp_zulässig","Druckänderung","Ergebnis"]
             if "Kommentar" in self.active_table.columns:
                 display_cols.append("Kommentar")
             display_cols.extend(["Bemerkung", "Besonderheit","Pfad"])
-            df_filter = self.active_table[(self.active_table["Ergebnis"].isnull()) | (self.active_table["Ergebnis"] == None)].loc[:,display_cols]
+            df_filter = self.active_table[((self.active_table["Ergebnis"].isnull()) | (self.active_table["Ergebnis"] == None)) & (~self.active_table["Pfad"].isnull())].loc[:,display_cols]
 
         elif query_name == "Druckprüfung fehlt - optische Beurteilung vorhanden":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Ergebnis","Ergebnis OI", "DN", "Material"]
@@ -779,16 +818,31 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
     def open_help(self):
         help_file = os.path.join(os.path.dirname(__file__),"help","index.html")
         os.startfile(help_file)
+
+    def print_all_graphs(self):
+        dlg = saveGraphs(self, self.dp_table.iloc[0])
+        dlg.show()
+        dlg.path_selected.connect(self.print_graph)
         
-    def print_graph(self):
-        row = self.table.currentRow()
-        if row >= 0:
-            col = self.active_view.columns.get_loc("Pfad")
-            try:
-                file_name = self.table.item(row,col).text()
-            except:
-                QMessageBox.warning(self,"Keine Datei gefunden","In der gewählten Zeile ist keine Datei hinterlegt. Vermutlich handelt es sich um einen Eintrag aus den Stammdaten bzw. Excel-Listen zu denen keine Dichtheitsprüfung gefunden wurde.")
+    def print_graph(self, all_graphs_path = None):
+
+        if all_graphs_path == False:
+            row = self.table.currentRow()
+            if row >= 0:
+                col = self.active_view.columns.get_loc("Pfad")
+                try:
+                    file_names = [self.table.item(row,col).text()]
+                except:
+                    QMessageBox.warning(self,"Keine Datei gefunden","In der gewählten Zeile ist keine Datei hinterlegt. Vermutlich handelt es sich um einen Eintrag aus den Stammdaten bzw. Excel-Listen zu denen keine Dichtheitsprüfung gefunden wurde.")
+                    return
+            else:
+                self.bar.pushInfo("Keine Zeile Ausgewählt", "Wähle eine Zeile in der Tabelle, um die Aktion auszuführen.")
                 return
+        else:
+            file_names = self.dp_table[~self.dp_table["Pfad"].isin(self.ignored_file_list)]["Pfad"]
+        
+        self.setCursor(Qt.WaitCursor)
+        for file_name in file_names:
             xtree = et.parse(file_name)
             try:
                 measurement = xtree.find("document").find("data").find("measurement")
@@ -846,6 +900,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             dn = reach_data["DN"]
             material = reach_data["Material"]
             result = reach_data["Ergebnis"]
+            date = reach_data["Datum"]
             if calm:
                 calm_pressure = df[df.time <= calm_time]
                 calm_pressure = calm_pressure.iloc[len(calm_pressure.index)-1].value
@@ -856,7 +911,10 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 stop_pressure = df[df.time <= stop_time]
                 stop_pressure = stop_pressure.iloc[len(stop_pressure.index)-1].value
             
-            delta_p = "{:.2f}".format(stop_pressure - start_pressure)
+            if start and stop:
+                delta_p = "{:.2f}".format(stop_pressure - start_pressure)
+            else:
+                delta_p = "-"
             # plot
             fig, ax = plt.subplots(figsize = (29.7/2.54,21/2.54))
             ax.axhline(y = test_pressure, linestyle = 'dashdot', color = "grey", linewidth = 1) 
@@ -892,7 +950,19 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             ax.set_title(f"{name}\n{dn} {material}    "+ r"$\Delta p$"+ f" {delta_p} mbar    Ergebnis: {result}", loc = "left")
             fig.canvas.manager.set_window_title(f'Dichtheitsprüfung Haltung {name}')
 
-            fig.show()          
+            if all_graphs_path == False:
+                fig.show()          
+            else:
+                all_graphs_path_fin = all_graphs_path.replace("{Bezeichnung}",name).replace("{Ergebnis}",str(result)).replace("{Datum}", datetime.strftime(date,"%Y%m%d"))
+                if os.path.isfile(all_graphs_path_fin):
+                    all_graphs_path_fin = os.path.splitext(all_graphs_path_fin)[0] + "_1" + os.path.splitext(all_graphs_path_fin)[1]
+
+                fig.savefig(all_graphs_path_fin.replace("{Bezeichnung}",name))
+
+        if all_graphs_path != False:
+            dir_name = os.path.dirname(all_graphs_path).replace('\\','/')
+            self.bar.pushSuccess("Export abgeschlossen", f"Die Grafiken wurden erfolgreich gespeichert in  <a href= '{dir_name}'> {dir_name} </a>")    
+        self.setCursor(Qt.ArrowCursor)
 
 
 class saveCSV(QDialog):
@@ -924,4 +994,59 @@ class saveCSV(QDialog):
         self.path_selected.emit(self.pfad.filePath())
         self.close()
         self.deleteLater()
-    
+
+
+class saveGraphs(QDialog):
+    path_selected = pyqtSignal(str)
+    def __init__(self, parent,preview_test):
+        QDialog.__init__(self, parent)
+        
+        self.preview_test = preview_test
+        self.setLayout(QGridLayout())
+        self.layout().setContentsMargins(10,10,10,10)
+        self.setWindowTitle("Pfad wählen..")
+        
+        #Überschrift festlegen
+        self.ueberschrift = QLabel()
+        self.description = QLabel()
+        self.filename = QLineEdit()
+        self.preview = QLabel()
+        self.pfad = QgsFileWidget()
+        self.pfad.setStorageMode(1)
+        self.pfad.fileChanged.connect(self.check_path)
+        self.ueberschrift.setText("Ordner wählen, in den die Grafiken gespeichert werden..")
+        self.description.setText("Dateiname festlegen: {Bezeichnung} wird durch den Namen der Haltung ersetzt.\nWeiteres können die Variablen {Ergebnis} und {Datum} verwendet werden.")
+        self.filename.textChanged.connect(self.update_preview)
+        self.filename.setText("{Bezeichnung}")
+        
+        
+        
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+
+        self.layout().addWidget(self.ueberschrift,0,0,1,1)
+        self.layout().addWidget(self.pfad,1,0,1,1)
+        self.layout().addWidget(self.description,2,0,1,1)
+        self.layout().addWidget(self.filename,3,0,1,1)
+        self.layout().addWidget(self.preview,4,0,1,1)
+        self.layout().addWidget(self.buttonBox,5,0,1,1)
+
+    def update_preview(self):
+        txt = self.filename.text().replace("{Bezeichnung}",self.preview_test["Bezeichnung"]).replace("{Ergebnis}",self.preview_test["Ergebnis"]).replace("{Datum}", datetime.strftime(self.preview_test["Datum"],"%Y%m%d"))
+        self.preview.setText(txt +".png")
+
+    def check_path(self):
+        if os.path.isdir(self.pfad.filePath()):
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+    def accept(self):
+        path = os.path.join(self.pfad.filePath(), self.filename.text()+ ".png")
+        self.setCursor(Qt.WaitCursor)
+        self.path_selected.emit(path)
+        self.setCursor(Qt.ArrowCursor)
+        self.close()
+        self.deleteLater()

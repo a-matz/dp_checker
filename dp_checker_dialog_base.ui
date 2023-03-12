@@ -46,6 +46,13 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="checkbox_incl_subdir">
+        <property name="text">
+         <string>Inklusive Unterordner</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -450,6 +457,16 @@
      <property name="verticalSpacing">
       <number>7</number>
      </property>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="button_ignore_file">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Dichtheitsprüfung ignorieren</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="1">
       <widget class="QPushButton" name="button_open_sew">
        <property name="enabled">
@@ -460,7 +477,17 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="2">
+     <item row="0" column="5">
+      <widget class="QPushButton" name="button_save_all_figs">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>alle Prüfverläufe als Bild exportieren</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
       <widget class="QPushButton" name="button_show_graph">
        <property name="enabled">
         <bool>false</bool>
@@ -470,7 +497,7 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="3">
+     <item row="0" column="2">
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -482,16 +509,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item row="0" column="0">
-      <widget class="QPushButton" name="button_ignore_file">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Dichtheitsprüfung ignorieren</string>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>

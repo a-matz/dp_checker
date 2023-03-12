@@ -5,12 +5,12 @@
 [general]
 name=Dichtheitsprüfung Checker
 qgisMinimumVersion=3.20
-description=With this plugin the content of raw data files from sewer leakage tests (.sew-files) can be read and checked.
+description=With this plugin, the raw data from leak tests (.sew files) can be read and checked for content.
 version=0.1
 author=Armin Matzl
 email=arminmatzl@gmail.com
 
-about=With this plugin you can import sewer leakage test data with air and check their contents by comparing them whith attributes from the belonging reach. Therefore '.sew'-files (common format to store leakage test data in Austria) are imported.It is possible to export the resulting table direclty or join the data with attributes from the belonging reach. Some methods are implemented to verify the content.
+about=This plugin allows for the content verification of leak tests on non-pressurized reaches using air in combination with the attributes of the corresponding reach. The raw data (*.sew files, commonly used format in Austria) is read and compared with the attributes of the reach. Both the master data and compliance with testing times are checked.
 
 
 tracker=https://github.com/a-matz/dp_checker/issues
