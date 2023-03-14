@@ -74,5 +74,29 @@ im Dropdown *Datenprüfung* ermöglicht.
 .. |check_data| image:: /figures/check_data.png
 	:scale: 75 %
 
+Öffnen einer .sew-Datei
+------------------------
+Der Button ".sew-Datei öffnen" steht zur Verfügung, sobald Dichtheitsprüfungen geladen wurden. Wenn eine Zeile in der Tabelle gewählt ist, kann die Datei geöffnet werden.
+Dies erfolgt im Standard-Programm, welches für die Öffnung dieses Dateityps festgelegt wurde.
+
+Exportieren von Grafiken
+-------------------------
+Durch klicken auf den Button "alle Prüfverläufe als Bild exportieren" können alle geladenen - und nicht ignorierten - Dichtheitsprüfungen exportiert werden.
+Für jede Prüfung wird ein eigenes Bild im gewählten Ordner erzeugt. Sollte eine Datei bereits bestehen, so wird mit der Endung "_1" eine neue Erzeugt.
+
+Für den Dateinamen können drei Variablen verwendet werden:
+	- Bezeichnung
+	- Ergebnis
+	- Datum
+
+Um die Variablen im Dateinamen verwenden zu können, müssen sie mit {} umschlossen sein.
+
+Beispiel: {Bezeichnung}_{Ergebnis}_{Datum}
+
+|export_plots|
+
+.. |export_plots| image:: /figures/export_plots.png
+	:scale: 75%
+
 .. toctree::
    :maxdepth: 2

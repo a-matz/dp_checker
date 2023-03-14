@@ -6,7 +6,7 @@
 name=Dichtheitsprüfung Checker
 qgisMinimumVersion=3.20
 description=With this plugin, the raw data from leak tests (.sew files) can be read and checked for content.
-version=0.1
+version=1.0
 author=Armin Matzl
 email=arminmatzl@gmail.com
 
@@ -24,7 +24,7 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=Druckprüfung, Kanal, Dichtheitsprüfung, leakage test, sewer,reach, Haltung
+tags=Druckprüfung, Kanal, Dichtheitsprüfung, leak test, sewer,reach, Haltung
 
 homepage=https://github.com/a-matz/dp_checker
 category=Plugins

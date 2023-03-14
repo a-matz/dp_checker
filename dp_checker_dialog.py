@@ -273,6 +273,14 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             except:
                 dp_dict["Druckänderung"] = None
             try:
+                items = measurement.find("pressure")         
+                value = []
+                for item in items:
+                    value.append(float(item.get("value")))
+                dp_dict["max_Druck"] = max(value)
+            except:
+                dp_dict["max_Druck"] = 0
+            try:
                 dp_dict["Prüfzeit"] = datetime.strptime(measurement.find("examDuration").get("value"),"%H:%M:%S").time()
             except:
                 dp_dict["Prüfzeit"] = None
@@ -388,7 +396,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         filter = [""]
         if not preview:
             if self.button_load_dp.isEnabled():
-                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Falsche Prüfzeit- Ergebnis: dicht","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein","Ergebnis Druckprüfung fehlt in .sew-Datei","Prüfdruck_soll - Prüfdruck > 1mbar"])
+                filter.extend(["Doppelte Prüfungen / Listeineinträge","Falsche Beruhigungszeit","Falsche Prüfzeit","Falsche Prüfzeit- Ergebnis: dicht","Ergebnis Druckprüfung stimmt nicht mit Druckabfall überein","Ergebnis Druckprüfung fehlt in .sew-Datei","Prüfdruck_soll - Prüfdruck > 1mbar","max_Druck > Prüfdruck_soll + 15%"])
             if not only_dp:
                 if self.group_base_data.isChecked() and self.button_load_base_data.isEnabled():
                     filter.extend(["keine Druckprüfung vorhanden","Fehler in Stammdatenabgleich: Länge","Fehler in Stammdatenabgleich: Länge (1m Toleranz)"])
@@ -401,7 +409,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                     if self.combobox_material.currentText() != "":
                         filter.append("Fehler in Stammdatenabgleich: Material")
 
-                if self.group_lists.isChecked() and self.button_preview_protocol_reach.isEnabled():
+                if self.group_lists.isChecked() and self.button_preview_protocol_reach.isEnabled() and self.reach_protocol_result.value() != 0:
                     filter.append("Druckprüfung fehlt - optische Beurteilung vorhanden")
 
         self.addFilter(filter)
@@ -689,7 +697,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Beruhigungszeit", "Beruhigungszeit_soll",
                             "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
                             "DN", "Material kürzel", "Material", "Ergebnis","Bemerkung", "Besonderheit", "Datei","Pfad"]
-            df_filter = self.active_table.query(query).loc[:,display_cols][self.active_table["Ergebnis"].str.lower() == "dicht"]
+            df_filter = self.active_table.query(query).loc[(self.active_table["Ergebnis"].str.lower() == "dicht"),display_cols]
 
         elif query_name == "Doppelte Prüfungen / Listeineinträge":
             reach = self.active_table["Bezeichnung"]
@@ -701,11 +709,11 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
 
         elif query_name == "Fehler in Stammdatenabgleich: Länge":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Länge","Länge_Stammdaten","Bemerkung", "Besonderheit","Pfad"]
-            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("Länge != Länge_Stammdaten").loc[:,display_cols]
+            df_filter = self.active_table.loc[(~self.active_table["Datei"].isnull()) &((self.active_table["Länge"] != self.active_table["Länge_Stammdaten"])), display_cols]
 
         elif query_name == "Fehler in Stammdatenabgleich: Länge (1m Toleranz)":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Länge","Länge_Stammdaten","Bemerkung", "Besonderheit","Pfad"]
-            df_filter = self.active_table[~self.active_table["Datei"].isnull()].query("(Länge - Länge_Stammdaten) > 1 ").loc[:,display_cols]
+            df_filter = self.active_table.loc[(~self.active_table["Datei"].isnull()) &(((self.active_table["Länge"]-self.active_table["Länge_Stammdaten"]).abs() > 1) | (self.active_table["Länge"].isnull())), display_cols]
 
         elif query_name == "Fehler in Stammdatenabgleich: Schacht oben":
             display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Schacht oben_Stammdaten"]
@@ -757,7 +765,14 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         
         elif query_name == "Prüfdruck_soll - Prüfdruck > 1mbar":
             query = "abs(Prüfdruck_soll - Prüfdruck) > 1"
-            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Prüfdruck_soll", "Prüfdruck", "Ergebnis","Bemerkung", "Besonderheit","Beruhigungszeit", "Beruhigungszeit_soll",
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Prüfdruck_soll","max_Druck" ,"Prüfdruck", "Ergebnis","Bemerkung", "Besonderheit","Beruhigungszeit", "Beruhigungszeit_soll",
+                            "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
+                            "DN", "Material kürzel", "Material", "Datei","Pfad"]
+            df_filter = self.active_table.query(query).loc[:,display_cols]
+        
+        elif query_name == "max_Druck > Prüfdruck_soll + 15%":
+            query = "(Prüfdruck_soll * 1.15) < max_Druck"
+            display_cols = ["Bezeichnung","Schacht oben", "Schacht unten","Prüfdruck_soll", "max_Druck" ,"Prüfdruck", "Ergebnis","Bemerkung", "Besonderheit","Beruhigungszeit", "Beruhigungszeit_soll",
                             "Prüfzeit", "Prüfzeit_soll","dp_zulässig", "Druckänderung",
                             "DN", "Material kürzel", "Material", "Datei","Pfad"]
             df_filter = self.active_table.query(query).loc[:,display_cols]
@@ -848,7 +863,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
                 measurement = xtree.find("document").find("data").find("measurement")
                 items = measurement.find("pressure")         
             except:
-                QMessageBox.warning(self,"Prüfverlauf kann nicht gezeichnet werden","Es wurde keine Prüfverlauf gerfunden.")
+                QMessageBox.warning(self,"Prüfverlauf kann nicht gezeichnet werden","Es wurde keine Prüfverlauf gefunden.")
                 return
 
             time = []
@@ -948,6 +963,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             myFmt = mdates.DateFormatter('%d')
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))      
             ax.set_title(f"{name}\n{dn} {material}    "+ r"$\Delta p$"+ f" {delta_p} mbar    Ergebnis: {result}", loc = "left")
+            d_time = (df.time.max() - df.time.min())
+            ax.set_xlim(df.time.min()-(0.03*d_time), df.time.max()+(d_time*0.06))
             fig.canvas.manager.set_window_title(f'Dichtheitsprüfung Haltung {name}')
 
             if all_graphs_path == False:
