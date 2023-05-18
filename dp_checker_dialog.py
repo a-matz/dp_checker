@@ -37,7 +37,7 @@ from qgis.core import (QgsMapLayerProxyModel, QgsGeometry,
                       QgsProcessing, Qgis)
 from qgis.gui import QgsFileWidget, QgsMessageBar
 from qgis.PyQt.QtCore import Qt, QSignalBlocker, QVariant, pyqtSignal
-from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel, QDialogButtonBox, QMessageBox, QSizePolicy, QLineEdit
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel, QDialogButtonBox, QMessageBox, QSizePolicy, QLineEdit, QProgressDialog
 import xml.etree.ElementTree as et
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -193,10 +193,14 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             files = glob.glob(f"{self.fileWidget.filePath()}/*.sew")
         
+        prog = QProgressDialog(self.tr("Lade Dateien.."),None, 0, len(files))
+        prog.setWindowModality(Qt.WindowModal)
+        
         # list to store dictionaries 
         df_list = []
         not_air_list = []
-        for dp_file in files:
+        for i,dp_file in enumerate(files):
+            prog.setValue(i)
             dp_dict = {}
             xtree = et.parse(dp_file)
             # sensor media
@@ -430,7 +434,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.setCursor(Qt.WaitCursor)
         if self.filter_name.text() != "":
             if filter:
-                data = data[data.Bezeichnung.str.lower().str.startswith(self.filter_name.text().lower())]
+                data = data[data.Bezeichnung.str.lower().str.startswith(self.filter_name.text().lower(), na = False)]
             else:
                 with QSignalBlocker(self.filter_name):
                     self.filter_name.setText("")
