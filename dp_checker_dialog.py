@@ -301,10 +301,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             if dp_dict["DN"] != None and dp_dict["Material kürzel"] != None:
                 pruef_dn = min(self.setvalues.index, key=lambda x:abs(x-dp_dict["DN"]))
                 pruefzeiten = self.setvalues.loc[pruef_dn]
-                if dp_dict["dp_zulässig"] == 15 or (dp_dict["dp_zulässig"] == 10 and pruef_dn >= 1100):
+                if abs(dp_dict["dp_zulässig"]) == 15 or (abs(dp_dict["dp_zulässig"]) == 10 and pruef_dn >= 1100):
                     pruefzeit_factor = 1
-                elif dp_dict["dp_zulässig"] == 7.5 or (dp_dict["dp_zulässig"] == 5 and pruef_dn >= 1100):
+                elif abs(dp_dict["dp_zulässig"]) == 7.5 or (abs(dp_dict["dp_zulässig"]) == 5 and pruef_dn >= 1100):
                     pruefzeit_factor = 0.5
+                else:
+                    pruefzeit_factor = 1
 
 
         
