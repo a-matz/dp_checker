@@ -23,6 +23,7 @@
 
 import os
 import glob
+import shutil
 from datetime import datetime, timedelta, time
 import pandas as pd
 import numpy as np
@@ -35,9 +36,9 @@ from qgis.core import (QgsMapLayerProxyModel, QgsGeometry,
                       QgsProject, QgsFeature, QgsPoint, edit, QgsVectorLayer,
                       QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsField, QgsPointXY,
                       QgsProcessing, Qgis)
-from qgis.gui import QgsFileWidget, QgsMessageBar
+from qgis.gui import QgsFileWidget, QgsMessageBar, QgsCheckableComboBox
 from qgis.PyQt.QtCore import Qt, QSignalBlocker, QVariant, pyqtSignal
-from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel, QDialogButtonBox, QMessageBox, QSizePolicy, QLineEdit, QProgressDialog
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QDialog, QGridLayout, QLabel, QDialogButtonBox, QMessageBox, QSizePolicy, QLineEdit, QProgressDialog, QComboBox
 import xml.etree.ElementTree as et
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -86,6 +87,7 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.button_box.helpRequested.connect(self.open_help)
         self.button_show_graph.clicked.connect(self.print_graph)
         self.button_save_all_figs.clicked.connect(self.print_all_graphs)
+        self.button_copy_files.clicked.connect(self.copy_files)
 
         self.table.setAlternatingRowColors(True)
         self.table.setStyleSheet("alternate-background-color: #e9e7e3")
@@ -198,10 +200,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # list to store dictionaries 
         df_list = []
+        zusatzfilter_list = []
         not_air_list = []
         for i,dp_file in enumerate(files):
             prog.setValue(i)
             dp_dict = {}
+            zusatzfilter_dict = {}
             xtree = et.parse(dp_file)
             # sensor media
             #check if sensor media is air
@@ -359,8 +363,23 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             dp_dict["Datei"] = os.path.basename(dp_file)
             dp_dict["Pfad"] = dp_file
 
-
             df_list.append(dp_dict)
+
+            zusatzfilter_dict["Pfad"] = dp_file
+            try:
+                zusatzfilter_dict["Auftraggeber"] = protocol.find("clientName").get("value")
+            except:
+                zusatzfilter_dict["Auftraggeber"] = None
+            try:
+                zusatzfilter_dict["Betreiber"] = protocol.find("constructionOwner").get("value")
+            except:
+                zusatzfilter_dict["Betreiber"] = None
+            try:
+                zusatzfilter_dict["Projekt"] = protocol.find("examObject").get("value")
+            except:
+                zusatzfilter_dict["Projekt"] = None
+            
+            zusatzfilter_list.append(zusatzfilter_dict)
         
 
         if len(not_air_list) > 0:
@@ -376,9 +395,12 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.button_create_point_layer.setEnabled(True)
             self.filter_name.setEnabled(True)
             self.check_enable_basedata_button()
+            #filter fuer export in anderen Ordner
+            self.zusatzfilter = pd.DataFrame(zusatzfilter_list)
+            self.button_copy_files.setEnabled(True)
         else:
             try:
-                del self.dp_table, self.active_table, self.active_view
+                del self.dp_table, self.active_table, self.active_view, self.zusatzfilter
             except:
                 pass
             self.table.clear()
@@ -390,6 +412,8 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.button_ignore_file.setEnabled(False)
             self.button_show_graph.setEnabled(False)
             self.button_save_all_figs.setEnabled(False)
+            self.button_create_point_layer.setEnabled(False)
+            self.button_copy_files.setEnabled(False)
 
             with QSignalBlocker(self.combobox_filter):
                 self.combobox_filter.clear()
@@ -839,12 +863,20 @@ class dpCheckerDialog(QtWidgets.QDialog, FORM_CLASS):
     def open_help(self):
         help_file = os.path.join(os.path.dirname(__file__),"help","index.html")
         os.startfile(help_file)
+    
+    def copy_files(self):
+        dlg = copySewFiles(self, self.zusatzfilter)
+        dlg.show()
+        dlg.copy_fin.connect(self.print_copy_message)
+    
+    def print_copy_message(self, anzahl):
+        self.bar.pushInfo("Kopieren Erfolgreich", f"{anzahl} Ausgewählte Dateien erfolgreich kopiert..")
 
     def print_all_graphs(self):
         dlg = saveGraphs(self, self.dp_table.iloc[0])
         dlg.show()
         dlg.path_selected.connect(self.print_graph)
-        
+           
     def print_graph(self, all_graphs_path = None):
 
         if all_graphs_path == False:
@@ -1071,5 +1103,70 @@ class saveGraphs(QDialog):
         self.setCursor(Qt.WaitCursor)
         self.path_selected.emit(path)
         self.setCursor(Qt.ArrowCursor)
+        self.close()
+        self.deleteLater()
+
+class copySewFiles(QDialog):
+    copy_fin = pyqtSignal(int)
+
+    def __init__(self, parent,df_filter):
+        QDialog.__init__(self, parent)
+        
+        self.df_filter = df_filter
+        self.setLayout(QGridLayout())
+        self.layout().setContentsMargins(10,10,10,10)
+        self.setWindowTitle("Filter und Pfad wählen..")
+        
+        #Überschrift festlegen
+        self.ueberschrift = QLabel()
+        #self.description = QLabel()
+        self.filename = QLineEdit()
+        self.preview = QLabel()
+        self.pfad = QgsFileWidget()
+        self.pfad.setStorageMode(1)
+        self.pfad.fileChanged.connect(self.check_path)
+        self.ueberschrift.setText("Filter aus Dropdown wählen")
+        self.combobox_colname = QComboBox()
+        self.combobox_colname.setMinimumWidth(150)
+        self.combobox_colname.currentIndexChanged.connect(self.update_filter)
+        self.combobox_filter = QgsCheckableComboBox()
+        self.combobox_filter.setMinimumWidth(250)
+        self.combobox_colname.addItems(self.df_filter.columns)      
+        
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.layout().addWidget(self.ueberschrift,0,0,1,3)
+        self.layout().addWidget(self.combobox_colname,1,0,1,1)
+        self.layout().addWidget(QLabel("="),1,1,1,1)
+        self.layout().addWidget(self.combobox_filter,1,2,1,1)
+        self.layout().addWidget(self.pfad,2,0,1,3)
+        self.layout().addWidget(self.buttonBox,3,0,1,3)
+
+    def update_filter(self):
+        self.combobox_filter.clear()
+        self.combobox_filter.addItems(self.df_filter[self.combobox_colname.currentText()].unique())
+
+    def check_path(self):
+        if os.path.isdir(self.pfad.filePath()):
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+    def accept(self):
+        self.setCursor(Qt.WaitCursor)
+        col = self.combobox_colname.currentText()
+        filter_list = self.combobox_filter.checkedItems()
+        df_copy = self.df_filter.loc[self.df_filter[col].isin(filter_list),"Pfad"]
+
+        for i, pfad in df_copy.iteritems():
+            name = os.path.basename(pfad)
+            new_path = os.path.join(self.pfad.filePath(), name)
+            shutil.copy(pfad,new_path)
+
+        self.setCursor(Qt.ArrowCursor)
+        self.copy_fin.emit(len(df_copy))
         self.close()
         self.deleteLater()
