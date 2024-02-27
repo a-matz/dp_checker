@@ -231,13 +231,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="group_lists">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
+    <widget class="QgsCollapsibleGroupBox" name="group_lists">
      <property name="title">
       <string>Protokollierungslisten für Abgleich wählen</string>
      </property>
@@ -247,21 +241,52 @@
      <property name="checked">
       <bool>false</bool>
      </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0" colspan="2">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="2" colspan="2">
+       <widget class="QgsFileWidget" name="filepath_dp_protocol"/>
+      </item>
+      <item row="4" column="3">
+       <widget class="QSpinBox" name="dp_protocol_comment"/>
+      </item>
+      <item row="0" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
          <string>Protokollierung optische Inspektion Haltung</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="3">
-       <widget class="QSpinBox" name="dp_protocol_comment"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_9">
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_11">
         <property name="text">
          <string>Zeilen überspringen</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Bezeichnung Haltung Spaltennummer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Ergebnis opt. Beurteilung Spaltennummer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Bezeichnung Haltung Spaltennummer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Protokollierung Dichtheitsprüfung</string>
         </property>
        </widget>
       </item>
@@ -275,42 +300,14 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>Zeilen überspringen</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2" colspan="2">
-       <widget class="QPushButton" name="button_preview_dp_protocol">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Vorschau</string>
-        </property>
-       </widget>
+      <item row="3" column="3">
+       <widget class="QSpinBox" name="dp_protocol_name"/>
       </item>
       <item row="3" column="1">
        <widget class="QSpinBox" name="reach_protocol_name"/>
       </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QPushButton" name="button_preview_protocol_reach">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Vorschau</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_14">
-        <property name="text">
-         <string>Ergebnis opt. Beurteilung Spaltennummer</string>
-        </property>
-       </widget>
+      <item row="4" column="1">
+       <widget class="QSpinBox" name="reach_protocol_result"/>
       </item>
       <item row="2" column="1">
        <widget class="QSpinBox" name="reach_protocol_skip">
@@ -329,36 +326,33 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2" colspan="2">
-       <widget class="QgsFileWidget" name="filepath_dp_protocol"/>
-      </item>
-      <item row="4" column="1">
-       <widget class="QSpinBox" name="reach_protocol_result"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_10">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_9">
         <property name="text">
-         <string>Bezeichnung Haltung Spaltennummer</string>
+         <string>Zeilen überspringen</string>
         </property>
        </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>Bezeichnung Haltung Spaltennummer</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QSpinBox" name="dp_protocol_name"/>
       </item>
       <item row="1" column="0" colspan="2">
        <widget class="QgsFileWidget" name="filepath_reach_protocol"/>
       </item>
-      <item row="0" column="2" colspan="2">
-       <widget class="QLabel" name="label_13">
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="button_preview_protocol_reach">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
-         <string>Protokollierung Dichtheitsprüfung</string>
+         <string>Vorschau</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2" colspan="2">
+       <widget class="QPushButton" name="button_preview_dp_protocol">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Vorschau</string>
         </property>
        </widget>
       </item>
@@ -611,15 +605,6 @@
  </customwidgets>
  <tabstops>
   <tabstop>button_load_dp</tabstop>
-  <tabstop>group_lists</tabstop>
-  <tabstop>reach_protocol_skip</tabstop>
-  <tabstop>reach_protocol_name</tabstop>
-  <tabstop>reach_protocol_result</tabstop>
-  <tabstop>button_preview_protocol_reach</tabstop>
-  <tabstop>dp_protocol_skip</tabstop>
-  <tabstop>dp_protocol_name</tabstop>
-  <tabstop>dp_protocol_comment</tabstop>
-  <tabstop>button_preview_dp_protocol</tabstop>
   <tabstop>combobox_filter</tabstop>
   <tabstop>button_csv_export</tabstop>
   <tabstop>table</tabstop>
