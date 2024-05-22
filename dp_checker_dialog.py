@@ -1125,7 +1125,7 @@ class copySewFiles(QDialog):
         self.pfad = QgsFileWidget()
         self.pfad.setStorageMode(1)
         self.pfad.fileChanged.connect(self.check_path)
-        self.ueberschrift.setText("Filter aus Dropdown wählen\nDurch das setzen eines Filters kann ein Teil der sew-Dateien kopiert werden.\z.B. um alle Dateien mehrerer Aufträge zu separieren.")
+        self.ueberschrift.setText("Filter aus Dropdown wählen\nDurch das setzen eines Filters kann ein Teil der sew-Dateien kopiert werden.\nz.B. um alle Dateien mehrerer Aufträge zu separieren.")
         self.combobox_colname = QComboBox()
         self.combobox_colname.setMinimumWidth(150)
         self.combobox_colname.currentIndexChanged.connect(self.update_filter)
